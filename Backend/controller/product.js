@@ -115,3 +115,45 @@ export const updateProduct = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+export const addToCard = async(req,res)=>{
+  try {
+    const userId = req.user._id
+    const user = await User.findById(userId)
+    if(!user||user.role == "Admin"){
+      return res.status(401).json({message:"cant add to card"})
+    }
+    const productId = req.params.id
+    const product = await Product.findById(productId)
+    if(!product){
+      return res.status(404).json({message:"product not found"})
+    }
+    await user.updateOne({
+      $push : {card : product }
+    })
+    res.status(201).json(user)
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+}
+export const removeFromCard = async(req,res)=>{
+  try {
+    const userId = req.user._id
+    const user = await User.findById(userId)
+    if(!user||user.role == "Admin"){
+      return res.status(401).json({message:"cant add to card"})
+    }
+    const productId = req.params.id
+    const product = await Product.findById(productId)
+    if(!product){
+      return res.status(404).json({message:"product not found"})
+    }
+    await user.updateOne({
+      $pull : {card : product }, new : true
+    })
+    res.status(201).json(user)
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+}

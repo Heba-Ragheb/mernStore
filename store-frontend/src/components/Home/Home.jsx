@@ -5,8 +5,11 @@ import "./Home.css";
 
 function Home() {
   const [user, setUser] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // Fetch user info
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -15,13 +18,26 @@ function Home() {
         });
         setUser(res.data.user);
       } catch (err) {
-        console.error(err);
-        // If unauthorized, redirect to login
-        navigate("/");
+        navigate("/"); // redirect if not logged in
       }
     };
     fetchUser();
   }, [navigate]);
+
+  // Fetch products
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await axios.get("http://localhost:5050/api/products/index");
+        setProducts(res.data.products);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -32,28 +48,23 @@ function Home() {
       );
       navigate("/");
     } catch (err) {
-      console.error(err);
-      // Even if logout fails, redirect to login
       navigate("/");
     }
   };
 
-  if (!user) {
+  if (loading || !user) {
     return (
       <div className="home-container">
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p className="loading-text">Loading user...</p>
-        </div>
+        <div className="loading-spinner"></div>
       </div>
     );
   }
 
-  // Get first letter of name for avatar
-  const avatarLetter = user.name ? user.name.charAt(0).toUpperCase() : "U";
+  const avatarLetter = user.name.charAt(0).toUpperCase();
 
   return (
     <div className="home-container">
+      {/* Navbar */}
       <nav className="home-navbar">
         <h1>Store Dashboard</h1>
         <button onClick={handleLogout} className="logout-btn">
@@ -62,32 +73,42 @@ function Home() {
       </nav>
 
       <div className="home-content">
-        <div className="welcome-card">
+        {/* User Info */}
+        <div className="user-panel">
           <div className="user-avatar">{avatarLetter}</div>
-          <h2>Welcome, {user.name}!</h2>
-          <span className="role-badge">{user.role}</span>
+          <div className="user-details">
+            <h2>{user.name}</h2>
+            <span className="role-badge">{user.role}</span>
+            <p>Email: {user.email}</p>
+            {user.googleId && <p>Login via Google</p>}
+          </div>
         </div>
 
-        <div className="user-info-card">
-          <div className="user-info-grid">
-            <div className="info-item">
-              <div className="info-label">Full Name</div>
-              <div className="info-value">{user.name}</div>
-            </div>
-            <div className="info-item">
-              <div className="info-label">Email Address</div>
-              <div className="info-value">{user.email}</div>
-            </div>
-            <div className="info-item">
-              <div className="info-label">Account Role</div>
-              <div className="info-value">{user.role}</div>
-            </div>
-            {user.googleId && (
-              <div className="info-item">
-                <div className="info-label">Login Method</div>
-                <div className="info-value">Google OAuth</div>
+        {/* Products Section */}
+        <div className="products-section">
+          <h2>Products</h2>
+          <div className="products-grid">
+            {products.map((product) => (
+              <div key={product._id} className="product-card">
+                {product.images && product.images.length > 0 ? (
+                  <img
+                    src={product.images[0].url}
+                    alt={product.name}
+                    className="product-image"
+                  />
+                ) : (
+                  <div className="product-no-image">No Image</div>
+                )}
+                <div className="product-info">
+                  <h3>{product.name}</h3>
+                  <p className="product-desc">{product.description}</p>
+                  <div className="product-meta">
+                    <span className="price">${product.price}</span>
+                    <span className="category">{product.category}</span>
+                  </div>
+                </div>
               </div>
-            )}
+            ))}
           </div>
         </div>
       </div>

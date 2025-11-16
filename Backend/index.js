@@ -11,6 +11,7 @@ import "./controller/passport.js"  // Import your controller to configure strate
 import googleAuthRouter from "./routes/passport.js"
 import cors from "cors";
 import productRoutes from "./routes/product.js"
+import categoryRoutes from "./routes/category.js"
 const app = express()
 
 const server = http.createServer(app); 
@@ -31,6 +32,7 @@ app.use(passport.session())
 app.use("/api/user",userRouter)
 app.use("/api/googleAuth",googleAuthRouter)
 app.use("/api/products", productRoutes);
+app.use("/api/categorys", categoryRoutes);
 mongoose.connect(process.env.DB_URL,{dbName:process.env.DB_NAME})
 .then(()=>{
     const port = process.env.PORT || 5050;

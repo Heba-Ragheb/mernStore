@@ -1,205 +1,173 @@
-/* Home.css */
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
+/* General container */
 .home-container {
+  font-family: 'Poppins', sans-serif;
+  background-color: #f4f6f8;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 40px 20px;
+  padding: 0;
+  margin: 0;
 }
 
+/* Navbar */
 .home-navbar {
-  max-width: 1200px;
-  margin: 0 auto 40px auto;
-  background: white;
-  border-radius: 16px;
-  padding: 20px 30px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-}
-
-.home-navbar h1 {
-  margin: 0;
-  font-size: 24px;
-  color: #2d3748;
-  font-weight: 700;
+  padding: 20px 40px;
+  background-color: #1f2937;
+  color: #fff;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
 .logout-btn {
-  padding: 10px 24px;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
+  background-color: #ef4444;
+  color: #fff;
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: inherit;
+  font-weight: bold;
 }
 
 .logout-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(245, 87, 108, 0.3);
+  background-color: #dc2626;
 }
 
-.home-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  animation: fadeIn 0.6s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.welcome-card {
-  background: white;
-  border-radius: 20px;
-  padding: 50px 40px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.welcome-card h2 {
-  margin: 0 0 20px 0;
-  font-size: 36px;
-  color: #2d3748;
-  font-weight: 700;
-}
-
-.user-info-card {
-  background: white;
-  border-radius: 20px;
-  padding: 40px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-}
-
-.user-info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 25px;
-  margin-top: 20px;
-}
-
-.info-item {
-  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-  padding: 25px;
-  border-radius: 12px;
-  border-left: 4px solid #667eea;
-  transition: all 0.3s ease;
-}
-
-.info-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-}
-
-.info-label {
-  font-size: 14px;
-  color: #718096;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 8px;
-}
-
-.info-value {
-  font-size: 20px;
-  color: #2d3748;
-  font-weight: 600;
-}
-
-.loading-container {
+/* User Panel */
+.user-panel {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-height: 60vh;
-}
-
-.loading-spinner {
-  width: 60px;
-  height: 60px;
-  border: 6px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.loading-text {
-  margin-top: 20px;
-  color: white;
-  font-size: 18px;
-  font-weight: 600;
+  background: #fff;
+  padding: 20px;
+  margin: 20px 40px;
+  border-radius: 12px;
+  box-shadow: 0 6px 10px rgba(0,0,0,0.05);
 }
 
 .user-avatar {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  width: 70px;
+  height: 70px;
+  background-color: #3b82f6;
+  color: #fff;
+  font-size: 28px;
+  font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 25px auto;
-  font-size: 48px;
-  color: white;
-  font-weight: 700;
-  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+  border-radius: 50%;
+  margin-right: 20px;
+}
+
+.user-details h2 {
+  margin: 0;
+  font-size: 22px;
 }
 
 .role-badge {
   display: inline-block;
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 600;
-  margin-top: 10px;
+  margin-top: 5px;
+  background-color: #10b981;
+  color: #fff;
+  padding: 2px 8px;
+  font-size: 12px;
+  border-radius: 4px;
 }
 
-@media (max-width: 768px) {
-  .home-navbar {
-    flex-direction: column;
-    gap: 15px;
-    text-align: center;
-  }
-  
-  .welcome-card {
-    padding: 40px 30px;
-  }
-  
-  .welcome-card h2 {
-    font-size: 28px;
-  }
-  
-  .user-info-grid {
-    grid-template-columns: 1fr;
-  }
+/* Products Grid */
+.products-section {
+  margin: 20px 40px;
+}
+
+.products-section h2 {
+  margin-bottom: 20px;
+  font-size: 24px;
+  color: #111827;
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.product-card {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 20px rgba(0,0,0,0.12);
+}
+
+.product-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.product-no-image {
+  width: 100%;
+  height: 180px;
+  background-color: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-weight: bold;
+}
+
+.product-info {
+  padding: 12px 16px;
+}
+
+.product-info h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.product-desc {
+  font-size: 14px;
+  color: #6b7280;
+  height: 40px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.product-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.price {
+  color: #ef4444;
+}
+
+.category {
+  background-color: #3b82f6;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: normal;
+}
+
+/* Loading spinner */
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 6px solid #ddd;
+  border-top: 6px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 200px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg);}
+  100% { transform: rotate(360deg);}
 }
