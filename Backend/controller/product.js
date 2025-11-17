@@ -128,7 +128,7 @@ export const addToCard = async(req,res)=>{
       return res.status(404).json({message:"product not found"})
     }
     await user.updateOne({
-      $push : {card : product }
+      $push : {card : product } , new : true
     })
     res.status(201).json(user)
   } catch (error) {

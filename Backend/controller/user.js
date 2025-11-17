@@ -30,35 +30,48 @@ export const register = async (req, res) => {
 
 }
 export const login = async (req, res) => {
-    try {
-        const email = req.body.email
-        const password = req.body.password
-        if (!email) {
-            res.status(404).json({ message: "user nor found" })
-        }
-        const user = await User.findOne({email})
-        const passwordCheck = await bcrypt.compare(password, user.password)
-        if (!passwordCheck) {
-            res.status(500).json({ message: "password or email is not correct" })
-        }
-        const token = generateToken(user)
-        res.cookie("token", token, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "None",
+  try {
+    const { email, password } = req.body;
 
-            maxAge: 30 * 24 * 60 * 60 * 1000,
-        })
-        res.status(200).json({ message: "user login", user: user })
-    } catch (error) {
-        res.status(400).send({
-            message: "An error occurred while logging",
-            error: error.message,
-        });
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password required" });
     }
 
+    const user = await User.findOne({ email });
 
-}
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const passwordCheck = await bcrypt.compare(password, user.password);
+    if (!passwordCheck) {
+      return res.status(400).json({ message: "Email or password incorrect" });
+    }
+
+    // Generate JWT
+    const token = generateToken(user);
+
+    // Set cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.status(200).json({
+      message: "User logged in",
+      user,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      message: "An error occurred while logging in",
+      error: error.message,
+    });
+  }
+};
+
 export const getCurrentUser = async (req,res)=>{
    try {
      const token = req.cookies.token
