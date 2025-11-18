@@ -6,6 +6,7 @@ function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('products');
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // Product Form
@@ -21,11 +22,21 @@ function AdminDashboard() {
   const [categoryForm, setCategoryForm] = useState({ name: '' });
   const [categoryImage, setCategoryImage] = useState(null);
 
+  // Offer Form
+  const [offerForm, setOfferForm] = useState({
+    title: '',
+    description: '',
+    discount: '',
+    backgroundColor: '#667eea'
+  });
+  const [offerImage, setOfferImage] = useState(null);
+
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5050';
 
   useEffect(() => {
     fetchProducts();
     fetchCategories();
+    fetchOffers();
   }, []);
 
   const fetchProducts = async () => {
@@ -41,6 +52,17 @@ function AdminDashboard() {
     try {
       const res = await axios.get(`${API_URL}/api/categorys/`);
       setCategories(res.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchOffers = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/offers/`, {
+        withCredentials: true
+      });
+      setOffers(res.data.offers);
     } catch (error) {
       console.error(error);
     }
@@ -129,6 +151,65 @@ function AdminDashboard() {
     }
   };
 
+  const handleAddOffer = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append('title', offerForm.title);
+    formData.append('description', offerForm.description);
+    formData.append('discount', offerForm.discount);
+    formData.append('backgroundColor', offerForm.backgroundColor);
+    if (offerImage) {
+      formData.append('image', offerImage);
+    }
+
+    try {
+      await axios.post(`${API_URL}/api/offers/add`, formData, {
+        withCredentials: true,
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      alert('Offer added successfully!');
+      setOfferForm({ title: '', description: '', discount: '', backgroundColor: '#667eea' });
+      setOfferImage(null);
+      fetchOffers();
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || 'Failed to add offer');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleOffer = async (id) => {
+    try {
+      await axios.patch(`${API_URL}/api/offers/toggle/${id}`, {}, {
+        withCredentials: true
+      });
+      fetchOffers();
+    } catch (error) {
+      console.error(error);
+      alert('Failed to toggle offer status');
+    }
+  };
+
+  const handleDeleteOffer = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this offer?'))
+      return;
+
+    try {
+      await axios.delete(`${API_URL}/api/offers/delete/${id}`, {
+        withCredentials: true,
+      });
+      alert('Offer deleted successfully');
+      fetchOffers();
+    } catch (error) {
+      console.error(error);
+      alert('Failed to delete offer');
+    }
+  };
+
   return (
     <div className="admin-dashboard">
       <div className="container">
@@ -146,6 +227,12 @@ function AdminDashboard() {
             onClick={() => setActiveTab('categories')}
           >
             Categories
+          </button>
+          <button
+            className={activeTab === 'offers' ? 'active' : ''}
+            onClick={() => setActiveTab('offers')}
+          >
+            Offers
           </button>
         </div>
 
@@ -268,6 +355,94 @@ function AdminDashboard() {
                     )}
                     <div className="item-info">
                       <h3>{category.name}</h3>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'offers' && (
+          <div className="tab-content">
+            <div className="form-section">
+              <h2>Add New Offer</h2>
+              <form onSubmit={handleAddOffer} className="admin-form">
+                <input
+                  type="text"
+                  placeholder="Offer Title"
+                  value={offerForm.title}
+                  onChange={(e) =>
+                    setOfferForm({ ...offerForm, title: e.target.value })
+                  }
+                  required
+                />
+                <textarea
+                  placeholder="Offer Description"
+                  value={offerForm.description}
+                  onChange={(e) =>
+                    setOfferForm({ ...offerForm, description: e.target.value })
+                  }
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Discount (e.g., 50% OFF)"
+                  value={offerForm.discount}
+                  onChange={(e) =>
+                    setOfferForm({ ...offerForm, discount: e.target.value })
+                  }
+                  required
+                />
+                <div className="color-picker-wrapper">
+                  <label>Background Color:</label>
+                  <input
+                    type="color"
+                    value={offerForm.backgroundColor}
+                    onChange={(e) =>
+                      setOfferForm({ ...offerForm, backgroundColor: e.target.value })
+                    }
+                  />
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setOfferImage(e.target.files[0])}
+                />
+                <button type="submit" disabled={loading}>
+                  {loading ? 'Adding...' : 'Add Offer'}
+                </button>
+              </form>
+            </div>
+
+            <div className="list-section">
+              <h2>All Offers</h2>
+              <div className="admin-table">
+                {offers.map((offer) => (
+                  <div key={offer._id} className="admin-item offer-item">
+                    {offer.image?.url && (
+                      <img src={offer.image.url} alt={offer.title} />
+                    )}
+                    <div className="item-info">
+                      <h3>{offer.title}</h3>
+                      <p className="offer-discount">{offer.discount}</p>
+                      <span className={`status-badge ${offer.isActive ? 'active' : 'inactive'}`}>
+                        {offer.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                    <div className="item-actions">
+                      <button
+                        onClick={() => handleToggleOffer(offer._id)}
+                        className="btn-toggle"
+                      >
+                        {offer.isActive ? 'Deactivate' : 'Activate'}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteOffer(offer._id)}
+                        className="btn-delete"
+                      >
+                        Delete
+                      </button>
                     </div>
                   </div>
                 ))}

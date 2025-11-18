@@ -6,30 +6,30 @@ import './Home.css';
 function Home() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5050';
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const fetchData = async () => {
     try {
-      const [productsRes, categoriesRes] = await Promise.all([
+      const [productsRes, categoriesRes, offersRes] = await Promise.all([
         axios.get(`${API_URL}/api/products/index`),
         axios.get(`${API_URL}/api/categorys/`),
+        axios.get(`${API_URL}/api/offers/active`),
       ]);
-
       setProducts(productsRes.data.products.slice(0, 6));
       setCategories(categoriesRes.data.slice(0, 4));
+      setOffers(offersRes.data.offers);
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
     }
   };
-
-  // ✅ Only ONE useEffect here
-  useEffect(() => {
-    fetchData();
-  }, [API_URL]); // safe dependency
 
   if (loading) {
     return (
@@ -51,7 +51,40 @@ function Home() {
         </div>
       </section>
 
-      {/* Featured Categories */}
+      {/* Offers Section */}
+      {offers.length > 0 && (
+        <section className="offers-section">
+          <div className="container">
+            <h2>Special Offers</h2>
+            <div className="offers-slider">
+              {offers.map((offer) => (
+                <div
+                  key={offer._id}
+                  className="offer-card"
+                  style={{
+                    background: `linear-gradient(135deg, ${offer.backgroundColor} 0%, ${offer.backgroundColor}dd 100%)`
+                  }}
+                >
+                  <div className="offer-content">
+                    <div className="offer-badge">{offer.discount}</div>
+                    <h3>{offer.title}</h3>
+                    <p>{offer.description}</p>
+                    <Link to="/products" className="offer-btn">
+                      Shop Now
+                    </Link>
+                  </div>
+                  {offer.image?.url && (
+                    <div className="offer-image">
+                      <img src={offer.image.url} alt={offer.title} />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       <section className="featured-categories">
         <div className="container">
           <h2>Featured Categories</h2>
@@ -75,7 +108,6 @@ function Home() {
         </div>
       </section>
 
-      {/* Featured Products */}
       <section className="featured-products">
         <div className="container">
           <h2>Featured Products</h2>
