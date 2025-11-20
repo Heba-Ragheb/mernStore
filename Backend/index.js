@@ -12,6 +12,7 @@ import googleAuthRouter from "./routes/passport.js"
 import cors from "cors";
 import productRoutes from "./routes/product.js"
 import categoryRoutes from "./routes/category.js"
+import orderRouter from "./routes/order.js"
 const app = express()
 
 const server = http.createServer(app); 
@@ -33,6 +34,7 @@ app.use("/api/user",userRouter)
 app.use("/api/googleAuth",googleAuthRouter)
 app.use("/api/products", productRoutes);
 app.use("/api/categorys", categoryRoutes);
+app.use("/api/order",orderRouter)
 mongoose.connect(process.env.DB_URL,{dbName:process.env.DB_NAME})
 .then(()=>{
     const port = process.env.PORT || 5050;

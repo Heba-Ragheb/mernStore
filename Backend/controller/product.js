@@ -134,6 +134,7 @@ export const addToCard = async(req,res)=>{
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message });
+    
   }
 }
 export const removeFromCard = async(req,res)=>{
@@ -156,4 +157,7 @@ export const removeFromCard = async(req,res)=>{
     console.error(error);
     res.status(500).json({ message: error.message });
   }
+} 
+const indexCard = async(req,res)=>{
+  
 }
