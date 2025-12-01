@@ -1,0 +1,161 @@
+.checkout-page {
+  min-height: 100vh;
+  padding: 40px 0;
+  background: #f7fafc;
+}
+
+.checkout-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.checkout-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.checkout-header h1 {
+  font-size: 36px;
+  color: #2d3748;
+  margin-bottom: 10px;
+}
+
+.checkout-header p {
+  font-size: 16px;
+  color: #718096;
+}
+
+.checkout-form {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.form-section {
+  margin-bottom: 40px;
+  padding-bottom: 30px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.form-section:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.form-section h2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 22px;
+  color: #2d3748;
+  margin-bottom: 25px;
+}
+
+.form-section h2 svg {
+  stroke: #667eea;
+}
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 15px 20px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 16px;
+  font-family: inherit;
+  transition: all 0.3s;
+  box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 30px;
+  padding-top: 30px;
+  border-top: 2px solid #e2e8f0;
+}
+
+.btn-back,
+.btn-place-order {
+  flex: 1;
+  padding: 16px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: none;
+}
+
+.btn-back {
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+}
+
+.btn-back:hover {
+  background: #667eea;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.btn-place-order {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-place-order:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.btn-place-order:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .checkout-form {
+    padding: 30px 20px;
+  }
+
+  .checkout-header h1 {
+    font-size: 28px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+}

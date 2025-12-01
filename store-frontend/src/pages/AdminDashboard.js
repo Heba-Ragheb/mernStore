@@ -8,6 +8,7 @@ function AdminDashboard() {
   const [categories, setCategories] = useState([]);
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [orders, setOrders] = useState([]);
 
   // Product Form
   const [productForm, setProductForm] = useState({
@@ -15,6 +16,7 @@ function AdminDashboard() {
     description: '',
     price: '',
     category: '',
+    stock: '',
   });
   const [productImages, setProductImages] = useState([]);
 
@@ -37,6 +39,7 @@ function AdminDashboard() {
     fetchProducts();
     fetchCategories();
     fetchOffers();
+    fetchOrders();
   }, []);
 
   const fetchProducts = async () => {
@@ -68,6 +71,17 @@ function AdminDashboard() {
     }
   };
 
+  const fetchOrders = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/order/`, {
+        withCredentials: true
+      });
+      setOrders(res.data.orders);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const handleAddProduct = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -77,7 +91,7 @@ function AdminDashboard() {
     formData.append('description', productForm.description);
     formData.append('price', productForm.price);
     formData.append('category', productForm.category);
-
+    formData.append('stock', productForm.stock);
     if (productImages.length === 1) {
       formData.append('image', productImages[0]);
     } else if (productImages.length > 1) {
@@ -96,7 +110,7 @@ function AdminDashboard() {
       });
 
       alert('Product added successfully!');
-      setProductForm({ name: '', description: '', price: '', category: '' });
+      setProductForm({ name: '', description: '', price: '', category: '', stock: '' });
       setProductImages([]);
       fetchProducts();
     } catch (error) {
@@ -210,6 +224,19 @@ function AdminDashboard() {
     }
   };
 
+  // Calculate order total price correctly with quantity
+  const calculateOrderTotal = (order) => {
+    if (!order.totalPrice) {
+      // Fallback: calculate from products if totalPrice not available
+      return order.products?.reduce((sum, item) => {
+        const price = item.productId?.price || item.price || 0;
+        const quantity = item.quantity || 1;
+        return sum + (price * quantity);
+      }, 0) || 0;
+    }
+    return order.totalPrice;
+  };
+
   return (
     <div className="admin-dashboard">
       <div className="container">
@@ -233,6 +260,12 @@ function AdminDashboard() {
             onClick={() => setActiveTab('offers')}
           >
             Offers
+          </button>
+          <button
+            className={activeTab === 'orders' ? 'active' : ''}
+            onClick={() => setActiveTab('orders')}
+          >
+            Orders ({orders.length})
           </button>
         </div>
 
@@ -270,6 +303,15 @@ function AdminDashboard() {
                   }
                   required
                 />
+                <input
+                  type="number"
+                  placeholder="Stock"
+                  value={productForm.stock}
+                  onChange={(e) =>
+                    setProductForm({ ...productForm, stock: e.target.value })
+                  }
+                  required
+                />
                 <select
                   value={productForm.category}
                   onChange={(e) =>
@@ -298,7 +340,7 @@ function AdminDashboard() {
             </div>
 
             <div className="list-section">
-              <h2>All Products</h2>
+              <h2>All Products ({products.length})</h2>
               <div className="admin-table">
                 {products.map((product) => (
                   <div key={product._id} className="admin-item">
@@ -306,6 +348,7 @@ function AdminDashboard() {
                     <div className="item-info">
                       <h3>{product.name}</h3>
                       <p>${product.price}</p>
+                      <p className="stock-info">Stock: {product.stock || 0}</p>
                     </div>
                     <button
                       onClick={() => handleDeleteProduct(product._id)}
@@ -346,7 +389,7 @@ function AdminDashboard() {
             </div>
 
             <div className="list-section">
-              <h2>All Categories</h2>
+              <h2>All Categories ({categories.length})</h2>
               <div className="admin-table">
                 {categories.map((category) => (
                   <div key={category._id} className="admin-item">
@@ -416,7 +459,7 @@ function AdminDashboard() {
             </div>
 
             <div className="list-section">
-              <h2>All Offers</h2>
+              <h2>All Offers ({offers.length})</h2>
               <div className="admin-table">
                 {offers.map((offer) => (
                   <div key={offer._id} className="admin-item offer-item">
@@ -447,6 +490,106 @@ function AdminDashboard() {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'orders' && (
+          <div className="tab-content">
+            <div className="list-section">
+              <h2>All Orders ({orders.length})</h2>
+              {orders.length === 0 ? (
+                <div className="no-data">
+                  <svg width="80" height="80" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" fill="#ccc"/>
+                  </svg>
+                  <p>No orders yet</p>
+                </div>
+              ) : (
+                <div className="orders-admin-list">
+                  {orders.map((order) => {
+                    const orderTotal = calculateOrderTotal(order);
+                    const totalItems = order.products?.reduce((sum, item) => sum + (item.quantity || 1), 0) || 0;
+                    
+                    return (
+                      <div key={order._id} className="order-admin-card">
+                        <div className="order-admin-header">
+                          <div>
+                            <h3>Order #{order._id.slice(-8).toUpperCase()}</h3>
+                            <p className="order-date">
+                              {new Date(order.createdAt).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                          </div>
+                          <span className="order-status-badge pending">Pending</span>
+                        </div>
+
+                        <div className="order-admin-details">
+                          <div className="order-customer-info">
+                            <h4>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" strokeWidth="2"/>
+                              </svg>
+                              Customer Information
+                            </h4>
+                            <p><strong>Name:</strong> {order.fullname}</p>
+                            <p><strong>Phone:</strong> {order.phone}</p>
+                            <p><strong>Address:</strong> {order.address}</p>
+                          </div>
+
+                          <div className="order-items-summary">
+                            <h4>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke="currentColor" strokeWidth="2"/>
+                              </svg>
+                              Items ({totalItems})
+                            </h4>
+                            <div className="order-items-list">
+                              {order.products?.slice(0, 3).map((item, index) => {
+                                const product = item.productId || item;
+                                const productName = product.name || 'Unknown Product';
+                                const productPrice = product.price || 0;
+                                const productImage = product.images?.[0]?.url;
+                                const quantity = item.quantity || 1;
+
+                                return (
+                                  <div key={index} className="order-item-mini">
+                                    {productImage && (
+                                      <img src={productImage} alt={productName} />
+                                    )}
+                                    <div className="order-item-details">
+                                      <p className="item-name">{productName}</p>
+                                      <p className="item-quantity">Qty: {quantity}</p>
+                                      <p className="item-price">${productPrice.toFixed(2)} each</p>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                              {order.products?.length > 3 && (
+                                <p className="more-items">
+                                  +{order.products.length - 3} more items
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="order-admin-footer">
+                          <div className="order-summary">
+                            <span className="order-total-label">Order Total:</span>
+                            <span className="order-total-amount">${orderTotal.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         )}

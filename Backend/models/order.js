@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import Product from "./product.js";
 const OrderSchema = mongoose.Schema({
     fullname: {
         type: String,
@@ -18,8 +19,19 @@ const OrderSchema = mongoose.Schema({
 
     },
     products: [
-
-    ], totalPrice: {
+  {
+    productId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      required: true,
+    },
+    quantity: {
+      type: Number,
+      required: true,
+      min: 1
+    }
+  }
+], totalPrice: {
         type: Number
     }},
     { timestamps: true })

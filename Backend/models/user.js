@@ -20,7 +20,18 @@ const userSchema = mongoose.Schema(
             enum: ["Admin", "User"],
             default: "User"
         },
-        card:[]
+
+        cart: [{
+            productId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Product"
+            },
+            quantity: {
+                type: Number,
+                default: 1,
+                min: 1
+            }
+        }]
     }
 )
 const User = mongoose.model("User", userSchema);

@@ -6,5 +6,5 @@ router.post("/addOrder",authJwt,addOrder)
 router.delete("/delete/:id",authJwt,removeOrder)
 router.get("/show/:id",authJwt,getOrder)
 router.get("/",authJwt,getAllOrder)
-router.put("/update",authJwt,updateOrder)
+router.put("/update/:id",authJwt,updateOrder)
 export default router

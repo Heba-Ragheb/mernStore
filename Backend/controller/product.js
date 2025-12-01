@@ -3,7 +3,7 @@ import User from "../models/user.js";
 // ---------------------- Add Product ----------------------
 export const addProduct = async (req, res) => {
   try {
-    const { name, description, price, category } = req.body;
+    const { name, description, price, category,stock } = req.body;
     const userId = req.user._id
     const user = await User.findById(userId)
     if (!user || user.role == "User") {
@@ -35,6 +35,7 @@ export const addProduct = async (req, res) => {
       description,
       category,
       images,
+      stock
     });
 
     res.status(201).json({ product });
@@ -116,27 +117,50 @@ export const updateProduct = async (req, res) => {
   }
 };
 export const addToCard = async(req,res)=>{
+
   try {
-    const userId = req.user._id
-    const user = await User.findById(userId)
-    if(!user||user.role == "Admin"){
-      return res.status(401).json({message:"cant add to card"})
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+    
+    if(!user || user.role === "Admin"){
+      return res.status(401).json({message:"Cannot add to cart"});
     }
-    const productId = req.params.id
-    const product = await Product.findById(productId)
+    
+    const productId = req.params.id;
+    const product = await Product.findById(productId);
+    
     if(!product){
-      return res.status(404).json({message:"product not found"})
+      return res.status(404).json({message:"Product not found"});
     }
-    await user.updateOne({
-      $push : {card : product } , new : true
-    })
-    res.status(201).json(user)
+    
+    // Check if product already in cart
+    const existingItem = user.cart.find(
+      item => item.productId.toString() === productId
+    );
+    
+    if (existingItem) {
+      // Increase quantity
+      await User.findOneAndUpdate(
+        { _id: userId, "cart.productId": productId },
+        { $inc: { "cart.$.quantity": 1 } },
+        { new: true }
+      );
+    } else {
+      // Add new item with quantity
+      await user.updateOne({
+        $push: { cart: { productId: productId, quantity: 1 } }
+      });
+    }
+    
+    const updatedUser = await User.findById(userId).populate('cart.productId');
+    res.status(201).json(updatedUser);
+    
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message });
-    
   }
 }
+
 export const removeFromCard = async(req,res)=>{
   try {
     const userId = req.user._id
@@ -150,7 +174,7 @@ export const removeFromCard = async(req,res)=>{
       return res.status(404).json({message:"product not found"})
     }
     await user.updateOne({
-      $pull : {card : product }, new : true
+      $pull : {cart : product }, new : true
     })
     res.status(201).json(user)
   } catch (error) {
@@ -160,4 +184,48 @@ export const removeFromCard = async(req,res)=>{
 } 
 const indexCard = async(req,res)=>{
   
-}
+} 
+// Add this new function to product.js controller
+export const updateCartQuantity = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+    
+    if (!user || user.role === "Admin") {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    const productId = req.params.id;
+    const { quantity } = req.body;
+    
+    if (!quantity || quantity < 1) {
+      return res.status(400).json({ message: "Invalid quantity" });
+    }
+    
+    // Check if product exists and has enough stock
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    
+    if (product.stock < quantity) {
+      return res.status(400).json({ 
+        message: `Only ${product.stock} items available in stock` 
+      });
+    }
+    
+    // Update quantity in cart
+    await User.findOneAndUpdate(
+      { _id: userId, "cart.productId": productId },
+      { $set: { "cart.$.quantity": quantity } },
+      { new: true }
+    );
+    
+    const updatedUser = await User.findById(userId).populate('cart.productId');
+    res.status(200).json(updatedUser);
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};

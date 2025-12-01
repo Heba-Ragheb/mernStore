@@ -32,7 +32,11 @@ const productSchema = new mongoose.Schema({
   rating: {
     type: Number
   },
-  reviews: []
+  reviews: [] ,
+  stock:{
+    type:Number,
+    
+  }
 },{ timestamps: true })
 const Product = mongoose.model("Product", productSchema);
 export default Product;

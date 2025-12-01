@@ -6,6 +6,8 @@ import ProductDetail from './pages/ProductDetail';
 import Categories from './pages/Categories';
 import CategoryProducts from './pages/CategoryProducts';
 import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
+import Orders from './pages/Orders';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import AdminDashboard from './pages/AdminDashboard';
@@ -31,6 +33,16 @@ function App() {
           <Route path="/cart" element={
             <PrivateRoute>
               <Cart />
+            </PrivateRoute>
+          } />
+          <Route path="/checkout" element={
+            <PrivateRoute>
+              <Checkout />
+            </PrivateRoute>
+          } />
+          <Route path="/orders" element={
+            <PrivateRoute>
+              <Orders />
             </PrivateRoute>
           } />
           
