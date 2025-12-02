@@ -454,4 +454,36 @@
     width: 280px;
     left: -280px;
   }
+} 
+/* Cart Icon in Navbar */
+.cart-icon-navbar {
+  position: relative;
+  margin-right: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.cart-icon-navbar svg {
+  stroke: #2d3748;
+  transition: 0.3s ease;
+}
+
+.cart-icon-navbar:hover svg {
+  stroke: #667eea;
+  transform: translateY(-2px);
+}
+
+/* Cart Count Badge */
+.cart-count {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  background: #e53e3e;
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }

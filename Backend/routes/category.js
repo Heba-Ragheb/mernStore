@@ -1,9 +1,28 @@
-import express from "express"
-import { addCategory, index, show } from "../controller/category.js"
-import { authJwt } from "../middleware/auth.js"
-import upload from "../middleware/upload.js"
-const router = express.Router()
-router.post("/add",authJwt,upload.single("image"),addCategory)
-router.get("/",index)
-router.get("/:id",show)
-export default router
+import express from "express";
+import {
+  addCategory,
+  getCategories,
+  show,
+  addSubcategory,
+  editCategory,
+  editSubcategory,
+  deleteCategory,
+  deleteSubcategory,
+} from "../controller/category.js";
+import { authJwt } from "../middleware/auth.js";
+
+const router = express.Router();
+
+// Category routes
+router.post("/", authJwt, addCategory);          // Add category
+router.get("/", getCategories);                  // Get all categories
+router.get("/:id", show);                        // Show products in category
+router.put("/:id", authJwt, editCategory);       // Edit category
+router.delete("/:id", authJwt, deleteCategory);  // Delete category
+
+// Subcategory routes
+router.post("/:categoryId/sub", authJwt, addSubcategory);
+router.put("/:categoryId/sub/:subId", authJwt, editSubcategory);
+router.delete("/:categoryId/sub/:subId", authJwt, deleteSubcategory);
+
+export default router;

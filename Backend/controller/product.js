@@ -161,27 +161,36 @@ export const addToCard = async(req,res)=>{
   }
 }
 
-export const removeFromCard = async(req,res)=>{
+export const removeFromCard = async (req, res) => {
   try {
-    const userId = req.user._id
-    const user = await User.findById(userId)
-    if(!user||user.role == "Admin"){
-      return res.status(401).json({message:"cant add to card"})
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+
+    if (!user || user.role === "Admin") {
+      return res.status(401).json({ message: "unauthorized" });
     }
-    const productId = req.params.id
-    const product = await Product.findById(productId)
-    if(!product){
-      return res.status(404).json({message:"product not found"})
+
+    const productId = req.params.id;
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
     }
-    await user.updateOne({
-      $pull : {cart : product }, new : true
-    })
-    res.status(201).json(user)
+
+    await User.updateOne(
+      { _id: userId },
+      { $pull: { cart: { productId: productId } } }
+    );
+
+    const updatedUser = await User.findById(userId);
+    res.status(200).json({ message: "Removed successfully", user: updatedUser });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message });
   }
-} 
+};
+
 const indexCard = async(req,res)=>{
   
 } 
