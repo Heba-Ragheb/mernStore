@@ -17,6 +17,7 @@ function AdminDashboard() {
     price: '',
     category: '',
     stock: '',
+    discount:'',
   });
   const [productImages, setProductImages] = useState([]);
 
@@ -99,6 +100,7 @@ function AdminDashboard() {
     formData.append('price', productForm.price);
     formData.append('category', productForm.category);
     formData.append('stock', productForm.stock);
+    formData.append('discount', productForm.discount);
     if (productImages.length === 1) {
       formData.append('image', productImages[0]);
     } else if (productImages.length > 1) {
@@ -117,7 +119,7 @@ function AdminDashboard() {
       });
 
       alert('Product added successfully!');
-      setProductForm({ name: '', description: '', price: '', category: '', stock: '' });
+      setProductForm({ name: '', description: '', price: '', category: '', stock: '' ,discount: ''});
       setProductImages([]);
       fetchProducts();
     } catch (error) {
@@ -411,6 +413,15 @@ function AdminDashboard() {
                   }
                   required
                 />
+                  <input
+                  type="number"
+                  placeholder="Discount"
+                  value={productForm.discount}
+                  onChange={(e) =>
+                    setProductForm({ ...productForm, discount: e.target.value })
+                  }
+                  required
+                />
                 <select
                   value={productForm.category}
                   onChange={(e) =>
@@ -446,7 +457,18 @@ function AdminDashboard() {
                     <img src={product.images[0]?.url} alt={product.name} />
                     <div className="item-info">
                       <h3>{product.name}</h3>
-                      <p>${product.price}</p>
+                     <div className="product-price">
+  {product.discount > 0 ? (
+    <>
+      <span className="old-price">${product.price}</span>
+      <span className="new-price">${product.finalPrice}</span>
+      <span className="discount-tag">-{product.discount}%</span>
+    </>
+  ) : (
+    <span className="new-price">${product.price}</span>
+  )}
+</div>
+
                       <p className="stock-info">Stock: {product.stock || 0}</p>
                     </div>
                     <button

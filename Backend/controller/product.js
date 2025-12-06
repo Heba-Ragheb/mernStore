@@ -3,7 +3,7 @@ import User from "../models/user.js";
 // ---------------------- Add Product ----------------------
 export const addProduct = async (req, res) => {
   try {
-    const { name, description, price, category,stock } = req.body;
+    const { name, description, price, category,stock,discount } = req.body;
     const userId = req.user._id
     const user = await User.findById(userId)
     if (!user || user.role == "User") {
@@ -28,14 +28,16 @@ export const addProduct = async (req, res) => {
         })
       );
     }
-
+    const finalPrice= price - (price*discount)/100
     const product = await Product.create({
       name,
       price,
       description,
       category,
       images,
-      stock
+      stock,
+      finalPrice,
+      discount
     });
 
     res.status(201).json({ product });

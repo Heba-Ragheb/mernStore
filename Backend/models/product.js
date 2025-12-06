@@ -26,9 +26,14 @@ const productSchema = new mongoose.Schema({
       url: String,
     }
   ],
-  dicount: {
-
+ discount:{
+   type: Number,
+      required: true,
+      min: 0,
+      max: 100,
+      default:0
   },
+ 
   rating: {
     type: Number
   },
@@ -36,7 +41,10 @@ const productSchema = new mongoose.Schema({
   stock:{
     type:Number,
     
-  }
+  }, finalPrice: {
+    type: Number,
+    
+  },
 },{ timestamps: true })
 const Product = mongoose.model("Product", productSchema);
 export default Product;

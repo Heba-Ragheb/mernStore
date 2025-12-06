@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Navbar.css';
@@ -7,6 +7,9 @@ function Navbar() {
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchActive, setSearchActive] = useState(false);
+  const searchInputRef = useRef(null);
 
   const handleLogout = async () => {
     await logout();
@@ -21,6 +24,49 @@ function Navbar() {
   const closeMenu = () => {
     setIsOpen(false);
   };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+      setSearchActive(false);
+      setIsOpen(false);
+    }
+  };
+
+  const openSearch = () => {
+    setSearchActive(true);
+    setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 100);
+  };
+
+  const closeSearch = () => {
+    if (!searchQuery) {
+      setSearchActive(false);
+    }
+  };
+
+  // Close search when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const searchContainer = document.querySelector('.navbar-search-expanded');
+      const searchIcon = document.querySelector('.search-icon-btn');
+      
+      if (searchContainer && !searchContainer.contains(event.target) && 
+          searchIcon && !searchIcon.contains(event.target)) {
+        if (!searchQuery) {
+          setSearchActive(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [searchQuery]);
 
   return (
     <>
@@ -51,20 +97,74 @@ function Navbar() {
             </Link>
           </div>
 
-          <div className="navbar-right">
-            {/* Cart Icon */}
-<Link to="/cart" className="cart-icon-navbar">
-  <svg viewBox="0 0 24 24" width="26" height="26" fill="none">
-    <circle cx="9" cy="21" r="1" stroke="currentColor" strokeWidth="2"/>
-    <circle cx="20" cy="21" r="1" stroke="currentColor" strokeWidth="2"/>
-    <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" 
-      stroke="currentColor" strokeWidth="2"/>
-  </svg>
+          {/* Expanded Search Overlay */}
+          {searchActive && (
+            <div className="navbar-search-expanded">
+              <form onSubmit={handleSearch} className="navbar-search-form">
+                <svg className="search-form-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
+                  <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="search-input-field"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="search-clear-btn"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2"/>
+                    </svg>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={closeSearch}
+                  className="search-close-btn"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2"/>
+                  </svg>
+                </button>
+              </form>
+            </div>
+          )}
 
-  {user?.cart?.length > 0 && (
-    <span className="cart-count">{user.cart.length}</span>
-  )}
-</Link>
+          <div className="navbar-right">
+            {/* Search Icon Button */}
+            {!searchActive && (
+              <button 
+                className="search-icon-btn"
+                onClick={openSearch}
+                aria-label="Search"
+              >
+                <svg viewBox="0 0 24 24" width="26" height="26" fill="none">
+                  <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
+                  <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
+            )}
+
+            {/* Cart Icon */}
+            <Link to="/cart" className="cart-icon-navbar">
+              <svg viewBox="0 0 24 24" width="26" height="26" fill="none">
+                <circle cx="9" cy="21" r="1" stroke="currentColor" strokeWidth="2"/>
+                <circle cx="20" cy="21" r="1" stroke="currentColor" strokeWidth="2"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" 
+                  stroke="currentColor" strokeWidth="2"/>
+              </svg>
+
+              {user?.cart?.length > 0 && (
+                <span className="cart-count">{user.cart.length}</span>
+              )}
+            </Link>
 
             {user && (
               <div className="user-badge">
@@ -102,6 +202,25 @@ function Navbar() {
               <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
             </svg>
           </button>
+        </div>
+
+        {/* Sidebar Search */}
+        <div className="sidebar-search">
+          <form onSubmit={handleSearch}>
+            <div className="sidebar-search-wrapper">
+              <svg className="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
+                <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="sidebar-search-input"
+              />
+            </div>
+          </form>
         </div>
 
         <ul className="sidebar-menu">
@@ -143,6 +262,9 @@ function Navbar() {
                     <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" stroke="currentColor" strokeWidth="2"/>
                   </svg>
                   <span>Cart</span>
+                  {user?.cart?.length > 0 && (
+                    <span className="sidebar-cart-badge">{user.cart.length}</span>
+                  )}
                 </Link>
               </li>
               <li>
@@ -169,7 +291,6 @@ function Navbar() {
         </ul>
 
         <div className="sidebar-auth">
-          
           {user ? (
             <>
               <div className="user-info">

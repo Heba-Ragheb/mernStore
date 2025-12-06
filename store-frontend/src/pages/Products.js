@@ -53,7 +53,20 @@ function Products() {
                   <p className="product-description">
                     {product.description.substring(0, 100)}...
                   </p>
-                  <p className="product-price">${product.price}</p>
+                   <span className="new-price">stock:{product.stock}</span>
+                     
+                  <div className="product-price">
+                    {product.discount > 0 ? (
+                      <>
+                        <span className="old-price">${product.price}</span>
+                        <span className="new-price">${product.finalPrice}</span>
+                        <span className="discount-tag">-{product.discount}%</span>
+                      </>
+                    ) : (
+                      <span className="new-price">${product.price}</span>
+                    )}
+                  </div>
+
                 </div>
               </Link>
             ))}

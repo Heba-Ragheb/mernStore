@@ -71,3 +71,55 @@
     font-size: 32px;
   }
 }
+.product-price {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.old-price {
+  text-decoration: line-through;
+  color: #a0aec0;
+  font-size: 18px;
+}
+
+.new-price {
+  color: #667eea;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.discount-tag {
+  background: #e53e3e;
+  color: white;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.product-price {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.old-price {
+  text-decoration: line-through;
+  color: #a0aec0;
+  font-size: 18px;
+}
+
+.new-price {
+  color: #667eea;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.discount-tag {
+  background: #e53e3e;
+  color: white;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 700;
+}

@@ -97,8 +97,17 @@ function ProductDetail() {
 
           <div className="product-details">
             <h1>{product.name}</h1>
-            <p className="product-price">${product.price}</p>
-            <p className="product-description">{product.description}</p>
+             {product.discount > 0 ? (
+                      <>
+                        <span className="old-price">${product.price}</span>
+                        <span className="new-price">${product.finalPrice}</span>
+                        <span className="discount-tag">-{product.discount}%</span>
+                      </>
+                    ) : (
+                      <span className="new-price">${product.price}</span>
+                    )}
+                    <span className="old-price">${product.stock}</span>
+                     <p className="product-description">{product.description}</p>
 
             <button
               onClick={handleAddToCart}

@@ -43,14 +43,14 @@ export const addOrder = async (req, res) => {
       await product.save();
 
       // Calculate total
-      const itemTotal = product.price * item.quantity;
+      const itemTotal = product.finalPrice * item.quantity;
       totalPrice += itemTotal;
 
       // Build product with details for order
       productsWithDetails.push({
         productId: product._id,
         name: product.name,
-        price: product.price,
+        price: product.finalPrice,
         quantity: item.quantity,
         images: product.images
       });
@@ -74,9 +74,9 @@ export const addOrder = async (req, res) => {
       .map((item) => {
         const name = item.name || "Product";
         const image = item.images?.[0]?.url || "";
-        const price = Number(item.price || 0).toFixed(2);
+        const price = Number(item.finalPrice || 0).toFixed(2);
         const qty = item.quantity || 1;
-        const subtotal = (Number(item.price || 0) * qty).toFixed(2);
+        const subtotal = (Number(item.finalPrice || 0) * qty).toFixed(2);
 
         return `
         <tr>
