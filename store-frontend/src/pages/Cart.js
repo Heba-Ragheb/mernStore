@@ -89,7 +89,7 @@ function Cart() {
 
   const calculateTotal = () => {
     return cartItems
-      .reduce((total, item) => total + (item.price || 0) * (item.quantity || 1), 0)
+      .reduce((total, item) => total + (item.finalPrice || 0) * (item.quantity || 1), 0)
       .toFixed(2);
   };
 
@@ -136,7 +136,7 @@ function Cart() {
                     <p className="cart-item-description">
                       {item.description?.substring(0, 100)}...
                     </p>
-                    <p className="cart-item-price">${item.price}</p>
+                    <p className="cart-item-price">${item.finalPrice}</p>
                     
                     {/* Quantity Controls */}
                     <div className="quantity-controls">
@@ -158,7 +158,7 @@ function Cart() {
                     </div>
                     
                     <p className="item-subtotal">
-                      Subtotal: ${(item.price * item.quantity).toFixed(2)}
+                      Subtotal: ${(item.finalPrice * item.quantity).toFixed(2)}
                     </p>
                   </div>
                   <button

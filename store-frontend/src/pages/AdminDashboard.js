@@ -17,13 +17,12 @@ function AdminDashboard() {
     price: '',
     category: '',
     stock: '',
-    discount:'',
+    discount: '',
   });
   const [productImages, setProductImages] = useState([]);
 
   // Category Form
   const [categoryForm, setCategoryForm] = useState({ name: '' });
-  const [categoryImage, setCategoryImage] = useState(null);
   const [editingCategory, setEditingCategory] = useState(null);
   const [editCategoryName, setEditCategoryName] = useState('');
 
@@ -33,12 +32,6 @@ function AdminDashboard() {
   const [editingSubcategory, setEditingSubcategory] = useState(null);
 
   // Offer Form
-  const [offerForm, setOfferForm] = useState({
-    title: '',
-    description: '',
-    discount: '',
-    backgroundColor: '#667eea'
-  });
   const [offerImage, setOfferImage] = useState(null);
 
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5050';
@@ -70,10 +63,8 @@ function AdminDashboard() {
 
   const fetchOffers = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/offers/`, {
-        withCredentials: true
-      });
-      setOffers(res.data.offers);
+      const res = await axios.get(`${API_URL}/api/offer/`);
+      setOffers(res.data.offers || []);
     } catch (error) {
       console.error(error);
     }
@@ -101,6 +92,7 @@ function AdminDashboard() {
     formData.append('category', productForm.category);
     formData.append('stock', productForm.stock);
     formData.append('discount', productForm.discount);
+    
     if (productImages.length === 1) {
       formData.append('image', productImages[0]);
     } else if (productImages.length > 1) {
@@ -108,10 +100,9 @@ function AdminDashboard() {
     }
 
     try {
-      const endpoint =
-        productImages.length === 1
-          ? '/api/products/addOneImage'
-          : '/api/products/addmultiImage';
+      const endpoint = productImages.length === 1
+        ? '/api/products/addOneImage'
+        : '/api/products/addmultiImage';
 
       await axios.post(`${API_URL}${endpoint}`, formData, {
         withCredentials: true,
@@ -119,7 +110,14 @@ function AdminDashboard() {
       });
 
       alert('Product added successfully!');
-      setProductForm({ name: '', description: '', price: '', category: '', stock: '' ,discount: ''});
+      setProductForm({ 
+        name: '', 
+        description: '', 
+        price: '', 
+        category: '', 
+        stock: '', 
+        discount: '' 
+      });
       setProductImages([]);
       fetchProducts();
     } catch (error) {
@@ -273,22 +271,17 @@ function AdminDashboard() {
     setLoading(true);
 
     const formData = new FormData();
-    formData.append('title', offerForm.title);
-    formData.append('description', offerForm.description);
-    formData.append('discount', offerForm.discount);
-    formData.append('backgroundColor', offerForm.backgroundColor);
     if (offerImage) {
       formData.append('image', offerImage);
     }
 
     try {
-      await axios.post(`${API_URL}/api/offers/add`, formData, {
+      await axios.post(`${API_URL}/api/offer/addOffer`, formData, {
         withCredentials: true,
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
       alert('Offer added successfully!');
-      setOfferForm({ title: '', description: '', discount: '', backgroundColor: '#667eea' });
       setOfferImage(null);
       fetchOffers();
     } catch (error) {
@@ -299,24 +292,12 @@ function AdminDashboard() {
     }
   };
 
-  const handleToggleOffer = async (id) => {
-    try {
-      await axios.patch(`${API_URL}/api/offers/toggle/${id}`, {}, {
-        withCredentials: true
-      });
-      fetchOffers();
-    } catch (error) {
-      console.error(error);
-      alert('Failed to toggle offer status');
-    }
-  };
-
   const handleDeleteOffer = async (id) => {
     if (!window.confirm('Are you sure you want to delete this offer?'))
       return;
 
     try {
-      await axios.delete(`${API_URL}/api/offers/delete/${id}`, {
+      await axios.delete(`${API_URL}/api/offer/deleteOffer/${id}`, {
         withCredentials: true,
       });
       alert('Offer deleted successfully');
@@ -327,15 +308,29 @@ function AdminDashboard() {
     }
   };
 
-  const calculateOrderTotal = (order) => {
-    if (!order.totalPrice) {
-      return order.products?.reduce((sum, item) => {
-        const price = item.productId?.price || item.price || 0;
-        const quantity = item.quantity || 1;
-        return sum + (price * quantity);
-      }, 0) || 0;
+  const handleStatusChange = async (orderId, newStatus) => {
+    try {
+      await axios.put(
+        `${API_URL}/api/order/update/${orderId}`,
+        { status: newStatus },
+        { withCredentials: true }
+      );
+      fetchOrders();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to update order status");
     }
-    return order.totalPrice;
+  };
+
+  const calculateOrderTotal = (order) => {
+    if (order.totalPrice) {
+      return order.totalPrice;
+    }
+    return order.products?.reduce((sum, item) => {
+      const price = item.price || item.productId?.price || 0;
+      const quantity = item.quantity || 1;
+      return sum + (price * quantity);
+    }, 0) || 0;
   };
 
   return (
@@ -413,14 +408,13 @@ function AdminDashboard() {
                   }
                   required
                 />
-                  <input
+                <input
                   type="number"
-                  placeholder="Discount"
+                  placeholder="Discount (%)"
                   value={productForm.discount}
                   onChange={(e) =>
                     setProductForm({ ...productForm, discount: e.target.value })
                   }
-                  required
                 />
                 <select
                   value={productForm.category}
@@ -457,18 +451,19 @@ function AdminDashboard() {
                     <img src={product.images[0]?.url} alt={product.name} />
                     <div className="item-info">
                       <h3>{product.name}</h3>
-                     <div className="product-price">
-  {product.discount > 0 ? (
-    <>
-      <span className="old-price">${product.price}</span>
-      <span className="new-price">${product.finalPrice}</span>
-      <span className="discount-tag">-{product.discount}%</span>
-    </>
-  ) : (
-    <span className="new-price">${product.price}</span>
-  )}
-</div>
-
+                      <div className="product-price-info">
+                        {product.discount > 0 ? (
+                          <>
+                            <span className="old-price">${product.price}</span>
+                            <span className="new-price">
+                              ${(product.price * (1 - product.discount / 100)).toFixed(2)}
+                            </span>
+                            <span className="discount-tag">-{product.discount}%</span>
+                          </>
+                        ) : (
+                          <span className="new-price">${product.price}</span>
+                        )}
+                      </div>
                       <p className="stock-info">Stock: {product.stock || 0}</p>
                     </div>
                     <button
@@ -559,11 +554,9 @@ function AdminDashboard() {
                       )}
                     </div>
 
-                    {/* Subcategories Section */}
                     <div className="subcategories-section">
                       <h4>Subcategories ({category.subcategories?.length || 0})</h4>
                       
-                      {/* Add Subcategory Form */}
                       {selectedCategoryForSub === category._id ? (
                         <div className="add-subcategory-form">
                           <input
@@ -598,7 +591,6 @@ function AdminDashboard() {
                         </button>
                       )}
 
-                      {/* Subcategories List */}
                       {category.subcategories && category.subcategories.length > 0 && (
                         <div className="subcategories-list">
                           {category.subcategories.map((sub) => (
@@ -669,46 +661,18 @@ function AdminDashboard() {
             <div className="form-section">
               <h2>Add New Offer</h2>
               <form onSubmit={handleAddOffer} className="admin-form">
-                <input
-                  type="text"
-                  placeholder="Offer Title"
-                  value={offerForm.title}
-                  onChange={(e) =>
-                    setOfferForm({ ...offerForm, title: e.target.value })
-                  }
-                  required
-                />
-                <textarea
-                  placeholder="Offer Description"
-                  value={offerForm.description}
-                  onChange={(e) =>
-                    setOfferForm({ ...offerForm, description: e.target.value })
-                  }
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="Discount (e.g., 50% OFF)"
-                  value={offerForm.discount}
-                  onChange={(e) =>
-                    setOfferForm({ ...offerForm, discount: e.target.value })
-                  }
-                  required
-                />
-                <div className="color-picker-wrapper">
-                  <label>Background Color:</label>
-                  <input
-                    type="color"
-                    value={offerForm.backgroundColor}
-                    onChange={(e) =>
-                      setOfferForm({ ...offerForm, backgroundColor: e.target.value })
-                    }
-                  />
+                <div className="image-upload-preview">
+                  {offerImage && (
+                    <div className="preview-image">
+                      <img src={URL.createObjectURL(offerImage)} alt="Offer preview" />
+                    </div>
+                  )}
                 </div>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => setOfferImage(e.target.files[0])}
+                  required
                 />
                 <button type="submit" disabled={loading}>
                   {loading ? 'Adding...' : 'Add Offer'}
@@ -718,26 +682,16 @@ function AdminDashboard() {
 
             <div className="list-section">
               <h2>All Offers ({offers.length})</h2>
-              <div className="admin-table">
+              <div className="offers-grid">
                 {offers.map((offer) => (
-                  <div key={offer._id} className="admin-item offer-item">
-                    {offer.image?.url && (
-                      <img src={offer.image.url} alt={offer.title} />
+                  <div key={offer._id} className="offer-card">
+                    {offer.images?.[0]?.url && (
+                      <img src={offer.images[0].url} alt="Offer" className="offer-image" />
                     )}
-                    <div className="item-info">
-                      <h3>{offer.title}</h3>
-                      <p className="offer-discount">{offer.discount}</p>
-                      <span className={`status-badge ${offer.isActive ? 'active' : 'inactive'}`}>
-                        {offer.isActive ? 'Active' : 'Inactive'}
+                    <div className="offer-actions">
+                      <span className="offer-date">
+                        {new Date(offer.createdAt).toLocaleDateString()}
                       </span>
-                    </div>
-                    <div className="item-actions">
-                      <button
-                        onClick={() => handleToggleOffer(offer._id)}
-                        className="btn-toggle"
-                      >
-                        {offer.isActive ? 'Deactivate' : 'Activate'}
-                      </button>
                       <button
                         onClick={() => handleDeleteOffer(offer._id)}
                         className="btn-delete"
@@ -752,117 +706,118 @@ function AdminDashboard() {
           </div>
         )}
 
-       {activeTab === 'orders' && (
-  <div className="tab-content">
-    <div className="list-section">
-      <h2>All Orders ({orders.length})</h2>
-      {orders.length === 0 ? (
-        <div className="no-data">
-          <svg width="80" height="80" viewBox="0 0 24 24" fill="none">
-            <path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" fill="#ccc"/>
-          </svg>
-          <p>No orders yet</p>
-        </div>
-      ) : (
-        <div className="orders-admin-list">
-          {orders.map((order) => {
-            const orderTotal = order.totalPrice || 0;
-            const totalItems = order.products?.reduce((sum, item) => sum + (item.quantity || 1), 0) || 0;
-
-            const handleStatusChange = async (e) => {
-              const newStatus = e.target.value;
-              try {
-                await axios.put(
-                  `${API_URL}/api/order/updateStatus/${order._id}`,
-                  { status: newStatus },
-                  { withCredentials: true }
-                );
-                fetchOrders(); // Refresh orders after status change
-              } catch (error) {
-                console.error(error);
-                alert("Failed to update order status");
-              }
-            };
-
-            return (
-              <div key={order._id} className="order-admin-card">
-                <div className="order-admin-header">
-                  <div>
-                    <h3>Order #{order._id.slice(-8).toUpperCase()}</h3>
-                    <p className="order-date">
-                      {new Date(order.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </p>
-                  </div>
-
-                  <select
-                    value={order.status}
-                    onChange={handleStatusChange}
-                    className={`order-status-badge ${order.status.toLowerCase()}`}
-                  >
-                    <option value="Pending">Pending</option>
-                    <option value="Processing">Processing</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Cancelled">Cancelled</option>
-                  </select>
+        {activeTab === 'orders' && (
+          <div className="tab-content">
+            <div className="list-section">
+              <h2>All Orders ({orders.length})</h2>
+              {orders.length === 0 ? (
+                <div className="no-data">
+                  <svg width="80" height="80" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" fill="#ccc"/>
+                  </svg>
+                  <p>No orders yet</p>
                 </div>
+              ) : (
+                <div className="orders-admin-list">
+                  {orders.map((order) => {
+                    const orderTotal = calculateOrderTotal(order);
+                    const totalItems = order.products?.reduce((sum, item) => 
+                      sum + (item.quantity || 1), 0
+                    ) || 0;
 
-                <div className="order-admin-details">
-                  <div className="order-customer-info">
-                    <h4>Customer Information</h4>
-                    <p><strong>Name:</strong> {order.fullname}</p>
-                    <p><strong>Phone:</strong> {order.phone}</p>
-                    <p><strong>Address:</strong> {order.address}</p>
-                  </div>
+                    return (
+                      <div key={order._id} className="order-admin-card">
+                        <div className="order-admin-header">
+                          <div>
+                            <h3>Order #{order._id.slice(-8).toUpperCase()}</h3>
+                            <p className="order-date">
+                              {new Date(order.createdAt).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                          </div>
 
-                  <div className="order-items-summary">
-                    <h4>Items ({totalItems})</h4>
-                    <div className="order-items-list">
-                      {order.products?.slice(0, 3).map((item, index) => {
-                        const product = item.productId || item;
-                        const productName = product.name || 'Unknown Product';
-                        const productPrice = item.price || 0; // use item.price
-                        const productImage = product.images?.[0]?.url;
-                        const quantity = item.quantity || 1;
+                          <select
+                            value={order.status || 'Pending'}
+                            onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                            className={`order-status-select ${(order.status || 'Pending').toLowerCase()}`}
+                          >
+                            <option value="Pending">Pending</option>
+                            <option value="Processing">Processing</option>
+                            <option value="Shipped">Shipped</option>
+                            <option value="Delivered">Delivered</option>
+                            <option value="Cancelled">Cancelled</option>
+                          </select>
+                        </div>
 
-                        return (
-                          <div key={index} className="order-item-mini">
-                            {productImage && <img src={productImage} alt={productName} />}
-                            <div className="order-item-details">
-                              <p className="item-name">{productName}</p>
-                              <p className="item-quantity">Qty: {quantity}</p>
-                              <p className="item-price">${productPrice.toFixed(2)} each</p>
+                        <div className="order-admin-details">
+                          <div className="order-customer-info">
+                            <h4>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" strokeWidth="2"/>
+                              </svg>
+                              Customer Information
+                            </h4>
+                            <p><strong>Name:</strong> {order.fullname}</p>
+                            <p><strong>Phone:</strong> {order.phone}</p>
+                            <p><strong>Address:</strong> {order.address}</p>
+                          </div>
+
+                          <div className="order-items-summary">
+                            <h4>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke="currentColor" strokeWidth="2"/>
+                              </svg>
+                              Items ({totalItems})
+                            </h4>
+                            <div className="order-items-list">
+                              {order.products?.slice(0, 3).map((item, index) => {
+                                const product = item.productId || item;
+                                const productName = product.name || item.name || 'Unknown Product';
+                                const productPrice = item.price || product.price || 0;
+                                const productImage = product.images?.[0]?.url || item.images?.[0]?.url;
+                                const quantity = item.quantity || 1;
+
+                                return (
+                                  <div key={index} className="order-item-mini">
+                                    {productImage && (
+                                      <img src={productImage} alt={productName} />
+                                    )}
+                                    <div className="order-item-details">
+                                      <p className="item-name">{productName}</p>
+                                      <p className="item-quantity">Qty: {quantity}</p>
+                                      <p className="item-price">${productPrice.toFixed(2)} each</p>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                              {order.products?.length > 3 && (
+                                <p className="more-items">
+                                  +{order.products.length - 3} more items
+                                </p>
+                              )}
                             </div>
                           </div>
-                        );
-                      })}
-                      {order.products?.length > 3 && (
-                        <p className="more-items">+{order.products.length - 3} more items</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                        </div>
 
-                <div className="order-admin-footer">
-                  <div className="order-summary">
-                    <span className="order-total-label">Order Total:</span>
-                    <span className="order-total-amount">${orderTotal.toFixed(2)}</span>
-                  </div>
+                        <div className="order-admin-footer">
+                          <div className="order-summary">
+                            <span className="order-total-label">Order Total:</span>
+                            <span className="order-total-amount">${orderTotal.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  </div>
-)}
-
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

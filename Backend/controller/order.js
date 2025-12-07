@@ -50,7 +50,7 @@ export const addOrder = async (req, res) => {
       productsWithDetails.push({
         productId: product._id,
         name: product.name,
-        price: product.finalPrice,
+        finalPrice: product.finalPrice,
         quantity: item.quantity,
         images: product.images
       });

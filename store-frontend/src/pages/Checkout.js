@@ -61,7 +61,7 @@ function Checkout() {
 
   const calculateTotal = () => {
     return cartItems
-      .reduce((total, item) => total + (item.price || 0) * (item.quantity || 1), 0)
+      .reduce((total, item) => total + (item.finalPrice || 0) * (item.quantity || 1), 0)
       .toFixed(2);
   };
 
@@ -117,7 +117,7 @@ function Checkout() {
                     <p className="preview-item-qty">Qty: {item.quantity}</p>
                   </div>
                   <p className="preview-item-price">
-                    ${(item.price * item.quantity).toFixed(2)}
+                    ${(item.finalPrice * item.quantity).toFixed(2)}
                   </p>
                 </div>
               ))}
