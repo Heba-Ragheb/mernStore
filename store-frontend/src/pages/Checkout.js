@@ -15,7 +15,7 @@ function Checkout() {
     address: '',
   });
 
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5050';
+  const API_URL = process.env.REACT_APP_API_URL ;
 
   useEffect(() => {
     // Redirect if cart is empty

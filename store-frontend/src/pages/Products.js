@@ -10,7 +10,8 @@ function Products() {
   const { user, checkAuth } = useAuth();
   const navigate = useNavigate();
   
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5050';
+  const API_URL = process.env.REACT_APP_API_URL ;
+  console.log("API URL:", process.env.REACT_APP_API_URL);
 
   useEffect(() => {
     fetchProducts();

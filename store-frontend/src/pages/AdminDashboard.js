@@ -34,7 +34,7 @@ function AdminDashboard() {
   // Offer Form
   const [offerImage, setOfferImage] = useState(null);
 
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5050';
+  const API_URL = process.env.REACT_APP_API_URL ;
 
   useEffect(() => {
     fetchProducts();

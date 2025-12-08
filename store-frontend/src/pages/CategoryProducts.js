@@ -8,7 +8,7 @@ function CategoryProducts() {
   const [products, setProducts] = useState([]);
   const [categoryName, setCategoryName] = useState('');
   const [loading, setLoading] = useState(true);
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5050';
+  const API_URL = process.env.REACT_APP_API_URL ;
 
   useEffect(() => {
     fetchCategoryProducts();

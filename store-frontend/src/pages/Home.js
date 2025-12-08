@@ -10,7 +10,7 @@ function Home() {
   const [loading, setLoading] = useState(true);
   const [currentOfferIndex, setCurrentOfferIndex] = useState(0);
 
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5050';
+  const API_URL = process.env.REACT_APP_API_URL ;
 
   useEffect(() => {
     fetchData();

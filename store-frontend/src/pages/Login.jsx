@@ -13,7 +13,7 @@ const [email, setEmail] = useState("");
     e.preventDefault();
     try {
       await login(email, password);  // Use context's login instead of direct axios
-      navigate("/");  // Redirect after state update
+      navigate("/home");  // Redirect after state update
     } catch (err) {
       console.error(err.response?.data);
       alert(err.response?.data?.message || "Login failed");
@@ -21,7 +21,7 @@ const [email, setEmail] = useState("");
   };
 
   const handleGoogleLogin = () => {
-    window.open("http://localhost:5050/api/googleAuth/google", "_self");
+    window.open(`${process.env.REACT_APP_API_URL}/api/googleAuth/google`, "_self");
   };
 
   return (
