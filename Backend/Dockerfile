@@ -1,23 +1,20 @@
-# Use Node.js LTS version as the base image
+# Use Node.js LTS
 FROM node:20-alpine
 
-# Create app directory
+# Set working directory
 WORKDIR /usr/src/app
 
-# Install app dependencies
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
+# Copy package.json and package-lock.json
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install 
+RUN npm install
 
-
-
-# Bundle app source
+# Copy the rest of the project files
 COPY . .
 
-# Expose the port the app runs on
-EXPOSE ${PORT}
+# Expose the port (Back4App sets PORT=8080)
+EXPOSE 8080
 
-# Command to run the application
+# Start the server
 CMD ["node", "app.js"]
