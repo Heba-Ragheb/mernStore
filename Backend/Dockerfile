@@ -13,8 +13,9 @@ RUN npm install
 # Copy the rest of the project files
 COPY . .
 
-# Expose the port (Back4App sets PORT=8080)
+# Back4App uses port 8080
+ENV PORT=8080
 EXPOSE 8080
 
-# Start the server
-CMD ["node", "app.js"]
+# Start your correct file
+CMD ["node", "index.js"]
