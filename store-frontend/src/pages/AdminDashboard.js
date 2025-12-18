@@ -311,14 +311,15 @@ function AdminDashboard() {
   const handleStatusChange = async (orderId, newStatus) => {
     try {
       await axios.put(
-        `${API_URL}/api/order/update/${orderId}`,
+        `${API_URL}/api/order/updateStatus/${orderId}`,
         { status: newStatus },
         { withCredentials: true }
       );
+      alert('Order status updated successfully!');
       fetchOrders();
     } catch (error) {
       console.error(error);
-      alert("Failed to update order status");
+      alert(error.response?.data?.message || "Failed to update order status");
     }
   };
 
@@ -327,10 +328,33 @@ function AdminDashboard() {
       return order.totalPrice;
     }
     return order.products?.reduce((sum, item) => {
-      const price = item.price || item.productId?.price || 0;
+      const price = item.finalPrice || item.price || item.productId?.price || 0;
       const quantity = item.quantity || 1;
       return sum + (price * quantity);
     }, 0) || 0;
+  };
+
+  const getStatusColor = (status) => {
+    const colors = {
+      'Pending': '#f59e0b',
+      'Processing': '#3b82f6',
+      'Completed': '#10b981',
+      'Cancelled': '#ef4444',
+      'Failed': '#dc2626'
+    };
+    return colors[status] || '#6b7280';
+  };
+
+  const getPaymentMethodBadge = (method) => {
+    return method === 'Online' 
+      ? <span className="payment-badge online">💳 Online</span>
+      : <span className="payment-badge cash">💵 Cash</span>;
+  };
+
+  const getPaymentStatusBadge = (payment) => {
+    return payment === 'Paid'
+      ? <span className="payment-status-badge paid">✓ Paid</span>
+      : <span className="payment-status-badge unpaid">⏳ Unpaid</span>;
   };
 
   return (
@@ -739,18 +763,32 @@ function AdminDashboard() {
                                 minute: '2-digit'
                               })}
                             </p>
+                            <div style={{ marginTop: '10px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                              {getPaymentMethodBadge(order.paymentMethod)}
+                              {getPaymentStatusBadge(order.payment)}
+                            </div>
                           </div>
 
                           <select
                             value={order.status || 'Pending'}
                             onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                            className={`order-status-select ${(order.status || 'Pending').toLowerCase()}`}
+                            className="order-status-select"
+                            style={{
+                              backgroundColor: getStatusColor(order.status || 'Pending'),
+                              color: 'white',
+                              padding: '8px 12px',
+                              borderRadius: '6px',
+                              border: 'none',
+                              fontSize: '14px',
+                              fontWeight: '600',
+                              cursor: 'pointer'
+                            }}
                           >
                             <option value="Pending">Pending</option>
                             <option value="Processing">Processing</option>
-                            <option value="Shipped">Shipped</option>
-                            <option value="Delivered">Delivered</option>
+                            <option value="Completed">Completed</option>
                             <option value="Cancelled">Cancelled</option>
+                            <option value="Failed">Failed</option>
                           </select>
                         </div>
 
@@ -778,7 +816,7 @@ function AdminDashboard() {
                               {order.products?.slice(0, 3).map((item, index) => {
                                 const product = item.productId || item;
                                 const productName = product.name || item.name || 'Unknown Product';
-                                const productPrice = item.price || product.price || 0;
+                                const productPrice = item.finalPrice || item.price || product.price || 0;
                                 const productImage = product.images?.[0]?.url || item.images?.[0]?.url;
                                 const quantity = item.quantity || 1;
 
@@ -819,6 +857,44 @@ function AdminDashboard() {
           </div>
         )}
       </div>
+
+      <style jsx>{`
+        .payment-badge {
+          padding: 4px 12px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 600;
+          display: inline-block;
+        }
+        
+        .payment-badge.online {
+          background: #dbeafe;
+          color: #1e40af;
+        }
+        
+        .payment-badge.cash {
+          background: #d1fae5;
+          color: #065f46;
+        }
+        
+        .payment-status-badge {
+          padding: 4px 12px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 600;
+          display: inline-block;
+        }
+        
+        .payment-status-badge.paid {
+          background: #d1fae5;
+          color: #065f46;
+        }
+        
+        .payment-status-badge.unpaid {
+          background: #fef3c7;
+          color: #92400e;
+        }
+      `}</style>
     </div>
   );
 }

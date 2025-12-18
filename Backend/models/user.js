@@ -31,6 +31,17 @@ const userSchema = mongoose.Schema(
                 default: 1,
                 min: 1
             }
+        }],
+        order: [{
+            orderId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Order",
+                required: true,
+            },
+            status: {
+                type: String,
+                default: "Pending",
+            }
         }]
     }
 )

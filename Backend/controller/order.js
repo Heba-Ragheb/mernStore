@@ -2,9 +2,10 @@ import Order from "../models/order.js"
 import User from "../models/user.js"
 import Product from "../models/product.js"
 import { sendEmail } from "../Mail/email.js";
+
 export const addOrder = async (req, res) => {
   try {
-    const { fullname, phone, address } = req.body;
+    const { fullname, phone, address, paymentMethod, payment } = req.body;
     const userId = req.user._id;
     const user = await User.findById(userId);
 
@@ -56,18 +57,39 @@ export const addOrder = async (req, res) => {
       });
     }
 
+    // Validate payment for online orders
+    if (paymentMethod === "Online" && payment === "notPaid") {
+      return res.status(403).json({ message: "Cannot create order without payment" });
+    }
+
     // Create order with detailed products
     const order = await Order.create({
+      userId,
       fullname,
       phone,
       address,
       products: productsWithDetails,
-      totalPrice
+      totalPrice,
+      payment,
+      paymentMethod
     });
 
-    // Clear the user's cart after successful order
-    user.cart = [];
-    await user.save();
+    // Update user: add order reference and clear cart
+    await User.findByIdAndUpdate(
+      userId,
+      {
+        $push: {
+          order: {
+            orderId: order._id,
+            status: "Pending"
+          }
+        },
+        $set: {
+          cart: [] // clear cart in SAME operation
+        }
+      },
+      { new: true }
+    );
 
     // Build email HTML with correct data
     const itemsRows = order.products
@@ -139,6 +161,14 @@ export const addOrder = async (req, res) => {
                 <td style="padding:6px 0;color:#666;font-size:14px;">Order Date:</td>
                 <td style="padding:6px 0;color:#333;font-size:14px;font-weight:600;text-align:right;">${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</td>
               </tr>
+              <tr>
+                <td style="padding:6px 0;color:#666;font-size:14px;">Payment Method:</td>
+                <td style="padding:6px 0;color:#333;font-size:14px;font-weight:600;text-align:right;">${paymentMethod}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;color:#666;font-size:14px;">Payment Status:</td>
+                <td style="padding:6px 0;color:#333;font-size:14px;font-weight:600;text-align:right;">${payment === 'Paid' ? '✓ Paid' : '⏳ Unpaid'}</td>
+              </tr>
             </table>
           </div>
 
@@ -200,18 +230,19 @@ export const addOrder = async (req, res) => {
     </html>
     `;
 
-    // Send email (assuming you have a sendEmail function)
-    try {
-      await sendEmail(
-        user.email,
-        `Order Confirmation - Order #${order._id.toString().slice(-8).toUpperCase()}`,
-        html
-      );
+    // Send email - don't await, let it run in background
+    sendEmail(
+      user.email,
+      `Order Confirmation - Order #${order._id.toString().slice(-8).toUpperCase()}`,
+      html
+    ).then(() => {
       console.log(`✅ Order confirmation email sent to ${user.email}`);
-    } catch (emailError) {
+    }).catch((emailError) => {
       console.error('❌ Failed to send email:', emailError);
-      // Don't fail the order if email fails
-    }
+    });
+
+    // IMPORTANT: Only ONE response at the end
+    const updatedUser = await User.findById(userId).populate('order.orderId');
 
     res.status(201).json({
       success: true,
@@ -223,8 +254,10 @@ export const addOrder = async (req, res) => {
         address: order.address,
         products: order.products,
         totalPrice: order.totalPrice,
+        paymentMethod: order.paymentMethod,
+        payment: order.payment,
         createdAt: order.createdAt
-      }
+      },updatedUser
     });
 
   } catch (error) {
@@ -234,16 +267,19 @@ export const addOrder = async (req, res) => {
 };
 
 export const getOrder = async(req,res)=>{
-      try {
+  try {
     const orderId = req.params.id;
-         const userId = req.user._id
-    const user = await User.findById(userId)
-    const order = await Order.findById(orderId);
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+    
     if(!user){
-        return res.status(401).json({message:"unauthrized"})
+      return res.status(401).json({message:"unauthorized"})
     }
+    
+    const order = await Order.findById(orderId);
+    
     if (!order)
-      return res.status(404).json({ message: "Product not found" });
+      return res.status(404).json({ message: "Order not found" });
 
     res.status(200).json({ order });
   } catch (error) {
@@ -251,56 +287,127 @@ export const getOrder = async(req,res)=>{
     res.status(500).json({ message: error.message });
   }
 }
-export const getAllOrder = async(req,res)=>{
-      try {
-    const orders = await Order.find().populate('products.productId');
-     const userId = req.user._id
-    const user = await User.findById(userId)
-    if(!user||user.role == "User"){
-        return res.status(401).json({message:"unauthrized"})
+
+// NEW: Get user's orders from user schema (like cart)
+/*export const userOrders = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const user = await User.findById(userId).populate({
+      path: "order.orderId",
+      populate: { path: "products.productId" } // optional but powerful
+    });
+
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
+
+    const orders = user.order.map(orderRef => {
+      const orderObj = orderRef.orderId.toObject();
+
+      return {
+        ...orderObj,
+        userStatus: orderRef.status
+      };
+    });
+
+    res.status(200).json({
+      orders,
+      count: orders.length
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};*/
+
+
+export const getAllOrder = async(req,res)=>{
+  try {
+    const orders = await Order.find();
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+    
+    if(!user || user.role === "User"){
+      return res.status(401).json({message:"unauthorized"})
+    }
+    
     res.status(200).json({ orders });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message });
   }
 }
+
 export const updateOrder = async(req,res)=>{
-    try {
-    const orderId = req.params.id
-    const userId = req.user._id
-    const user = await User.findById(userId)
-    if(!user||user.role == "Admin"){
-        return res.status(401).json({message:"unauthrized"})
+  try {
+    const orderId = req.params.id;
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+    const order = await Order.findById(orderId);
+    
+    if(!user || user.role === "Admin"){
+      return res.status(401).json({message:"unauthorized"})
     }
-     await Order.findByIdAndUpdate(orderId)
+    
+    const now = new Date();
+    const orderDate = new Date(order.createdAt);
+    const diffDate = (now - orderDate) / (1000 * 60 * 60);
+    
+    if(diffDate > 24){
+      return res.status(403).json({message:"can't update order after 24 hours"})
+    }
+    
+    await Order.findByIdAndUpdate(orderId, req.body, {
+      new: true,
+      runValidators: true
+    });
+    
     res.status(201).json({message:"order updated"})
 
-} catch (error) {
+  } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message });
-}
+  }
 } 
-export const updateOrderStatus = async(req,res)=>{
-    try {
-    const { status } = req.body;
-    const orderId = req.params.id
-    const userId = req.user._id
-    const user = await User.findById(userId)
-    if(!user||user.role == "User"){
-        return res.status(401).json({message:"unauthrized"})
-    }
-     const order = await Order.findByIdAndUpdate(orderId,{status},{ new: true })
-    res.status(201).json({message:"order updated",order})
 
-} catch (error) {
+export const updateOrderStatus = async(req,res)=>{
+  try {
+    const { status } = req.body;
+    const orderId = req.params.id;
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+    
+    if(!user || user.role === "User"){
+      return res.status(401).json({message:"unauthorized"})
+    }
+    
+    // Update order status in Order collection
+    const order = await Order.findByIdAndUpdate(
+      orderId,
+      {status},
+      { new: true }
+    );
+    
+    // Update status in user's order array
+    await User.updateOne(
+      { _id: userId, 'order.orderId': orderId },
+      { $set: { 'order.$.status': status } }
+    );
+    
+    res.status(201).json({message:"order updated", order})
+
+  } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message });
-}
+  }
 } 
+
 export const removeOrder = async(req,res)=>{
   try {
     const orderId = req.params.id;
+    const userId = req.user._id;
     const order = await Order.findById(orderId);
     
     if (!order) {
@@ -315,7 +422,15 @@ export const removeOrder = async(req,res)=>{
       );
     }
     
+    // Remove order from user's order array
+    await User.findByIdAndUpdate(
+      userId,
+      { $pull: { order: { orderId: orderId } } }
+    );
+    
+    // Delete the order
     await Order.findByIdAndDelete(orderId);
+    
     res.status(200).json({message:"Order cancelled and stock restored"});
     
   } catch (error) {

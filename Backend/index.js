@@ -16,6 +16,7 @@ import session from "express-session";
 import passport from "passport";
 import "./controller/passport.js"; // Configure passport strategies
 import cors from "cors";
+import paymentRouter from "./routes/paymob.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -43,6 +44,7 @@ app.use("/api/products", productRoutes);
 app.use("/api/categorys", categoryRoutes);
 app.use("/api/order", orderRouter);
 app.use("/api/offer", offerRouter);
+app.use("/api/payment", paymentRouter);
 // Connect to MongoDB and start server
 mongoose.connect(process.env.DB_URL, { dbName: process.env.DB_NAME })
   .then(() => {

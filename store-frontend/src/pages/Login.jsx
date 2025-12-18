@@ -13,7 +13,7 @@ const [email, setEmail] = useState("");
     e.preventDefault();
     try {
       await login(email, password);  // Use context's login instead of direct axios
-      navigate("/home");  // Redirect after state update
+      navigate("/");  // Redirect after state update
     } catch (err) {
       console.error(err.response?.data);
       alert(err.response?.data?.message || "Login failed");
