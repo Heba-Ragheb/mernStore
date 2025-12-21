@@ -10,13 +10,23 @@ function ProductDetail() {
   const { user, checkAuth } = useAuth();
 
   const [product, setProduct] = useState(null);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
   const [addingToCart, setAddingToCart] = useState(false);
-  const API_URL = process.env.REACT_APP_API_URL ;
+  
+  // Review form state
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewText, setReviewText] = useState('');
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [submittingReview, setSubmittingReview] = useState(false);
+  
+  const API_URL = process.env.REACT_APP_API_URL;
 
   useEffect(() => {
     fetchProduct();
+    fetchReviews();
   }, [id]);
 
   const fetchProduct = async () => {
@@ -30,6 +40,15 @@ function ProductDetail() {
     }
   };
 
+  const fetchReviews = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/review/${id}`);
+      setReviews(res.data.reviews || []);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+    }
+  };
+
   const handleAddToCart = async () => {
     if (!user) {
       alert('Please login to add items to cart');
@@ -37,7 +56,6 @@ function ProductDetail() {
       return;
     }
 
-    // Check if product is out of stock
     if (!product || product.stock === 0) {
       alert('Sorry, this product is currently out of stock');
       return;
@@ -51,7 +69,7 @@ function ProductDetail() {
         { withCredentials: true }
       );
 
-      await checkAuth(); // Refresh user data to update cart
+      await checkAuth();
       alert('Product added to cart!');
     } catch (error) {
       console.error(error);
@@ -59,6 +77,95 @@ function ProductDetail() {
     } finally {
       setAddingToCart(false);
     }
+  };
+
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+
+    if (!user) {
+      alert('Please login to submit a review');
+      navigate('/login');
+      return;
+    }
+
+    if (rating === 0) {
+      alert('Please select a rating');
+      return;
+    }
+
+    if (!reviewText.trim()) {
+      alert('Please write a review');
+      return;
+    }
+
+    setSubmittingReview(true);
+    try {
+      await axios.post(
+        `${API_URL}/api/review/${id}`,
+        { review: reviewText, rating },
+        { withCredentials: true }
+      );
+
+      alert('Review submitted successfully!');
+      setReviewText('');
+      setRating(0);
+      setShowReviewForm(false);
+      fetchReviews(); // Refresh reviews
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || 'Failed to submit review');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    if (!window.confirm('Are you sure you want to delete this review?')) return;
+
+    try {
+      await axios.delete(`${API_URL}/api/review/${reviewId}`, {
+        withCredentials: true,
+      });
+      alert('Review deleted successfully!');
+      fetchReviews();
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || 'Failed to delete review');
+    }
+  };
+
+  const calculateAverageRating = () => {
+    if (reviews.length === 0) return 0;
+    const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
+    return (sum / reviews.length).toFixed(1);
+  };
+
+  const renderStars = (rating, interactive = false) => {
+    return [...Array(5)].map((_, index) => {
+      const starValue = index + 1;
+      return (
+        <svg
+          key={index}
+          className={`star ${interactive ? 'interactive' : ''} ${
+            starValue <= (interactive ? (hoverRating || rating) : rating) ? 'filled' : ''
+          }`}
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          onMouseEnter={() => interactive && setHoverRating(starValue)}
+          onMouseLeave={() => interactive && setHoverRating(0)}
+          onClick={() => interactive && setRating(starValue)}
+        >
+          <path
+            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+            stroke="currentColor"
+            strokeWidth="2"
+            fill={starValue <= (interactive ? (hoverRating || rating) : rating) ? 'currentColor' : 'none'}
+          />
+        </svg>
+      );
+    });
   };
 
   if (loading) {
@@ -87,6 +194,7 @@ function ProductDetail() {
   const finalPrice = product.discount > 0 
     ? (product.price * (1 - product.discount / 100)).toFixed(2)
     : product.price;
+  const averageRating = calculateAverageRating();
 
   return (
     <div className="product-detail-page">
@@ -128,6 +236,18 @@ function ProductDetail() {
           {/* Product Details */}
           <div className="product-details">
             <h1>{product.name}</h1>
+            
+            {/* Rating Summary */}
+            {reviews.length > 0 && (
+              <div className="rating-summary">
+                <div className="stars-display">
+                  {renderStars(parseFloat(averageRating))}
+                </div>
+                <span className="rating-text">
+                  {averageRating} out of 5 ({reviews.length} {reviews.length === 1 ? 'review' : 'reviews'})
+                </span>
+              </div>
+            )}
             
             {/* Price Section */}
             <div className="price-section">
@@ -203,14 +323,12 @@ function ProductDetail() {
               )}
             </button>
 
-            {/* Login Message */}
             {!user && !isOutOfStock && (
               <p className="login-message">
                 Please <a href="/login">login</a> to add items to cart
               </p>
             )}
 
-            {/* Out of Stock Message */}
             {isOutOfStock && (
               <p className="out-of-stock-message">
                 This product is currently unavailable. Check back later!
@@ -232,6 +350,108 @@ function ProductDetail() {
                 </span>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="reviews-section">
+          <div className="reviews-header">
+            <h2>Customer Reviews</h2>
+            {user && (
+              <button
+                onClick={() => setShowReviewForm(!showReviewForm)}
+                className="btn-write-review"
+              >
+                {showReviewForm ? 'Cancel' : 'Write a Review'}
+              </button>
+            )}
+          </div>
+
+          {/* Review Form */}
+          {showReviewForm && (
+            <div className="review-form-container">
+              <form onSubmit={handleSubmitReview} className="review-form">
+                <h3>Write Your Review</h3>
+                
+                <div className="form-group">
+                  <label>Rating *</label>
+                  <div className="stars-input">
+                    {renderStars(rating, true)}
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="review">Your Review *</label>
+                  <textarea
+                    id="review"
+                    value={reviewText}
+                    onChange={(e) => setReviewText(e.target.value)}
+                    placeholder="Share your experience with this product..."
+                    rows="5"
+                    required
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submittingReview}
+                  className="btn-submit-review"
+                >
+                  {submittingReview ? 'Submitting...' : 'Submit Review'}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* Reviews List */}
+          <div className="reviews-list">
+            {reviews.length === 0 ? (
+              <div className="no-reviews">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
+                  <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke="currentColor" strokeWidth="2"/>
+                </svg>
+                <p>No reviews yet. Be the first to review this product!</p>
+              </div>
+            ) : (
+              reviews.map((review) => (
+                <div key={review._id} className="review-card">
+                  <div className="review-header">
+                    <div className="review-author">
+                      <div className="author-avatar">
+                        {review.userName?.charAt(0).toUpperCase() || 'U'}
+                      </div>
+                      <div className="author-info">
+                        <h4>{review.userName || 'Anonymous'}</h4>
+                        <p className="review-date">
+                          {new Date(review.createdAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="review-rating">
+                      {renderStars(review.rating)}
+                    </div>
+                  </div>
+                  
+                  <p className="review-text">{review.review}</p>
+
+                  {user && user.name === review.userName && (
+                    <button
+                      onClick={() => handleDeleteReview(review._id)}
+                      className="btn-delete-review"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke="currentColor" strokeWidth="2"/>
+                      </svg>
+                      Delete
+                    </button>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
