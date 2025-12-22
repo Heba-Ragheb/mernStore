@@ -724,3 +724,192 @@
     padding: 14px 0;
   }
 }
+/* Additional CSS to add to your Navbar.css file */
+
+/* No Categories Message */
+.no-categories-message {
+  padding: 20px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.no-categories-message p {
+  margin: 0;
+}
+
+/* Categories Section Improvements */
+.categorie-section {
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 8px 0;
+  margin: 8px 0;
+}
+
+.categories-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  color: #2d3748;
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: #f9fafb;
+  cursor: default;
+}
+
+.categories-list-sidebar {
+  padding: 8px 0;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.categories-list-sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.categories-list-sidebar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.categories-list-sidebar::-webkit-scrollbar-thumb {
+  background: #667eea;
+  border-radius: 4px;
+}
+
+.category-item-sidebar {
+  margin-bottom: 4px;
+}
+
+.category-header-sidebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 12px;
+  gap: 8px;
+}
+
+.category-name-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 8px;
+  background: transparent;
+  border: none;
+  color: #2d3748;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.category-name-btn:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+  transform: translateX(4px);
+}
+
+.category-name-btn svg {
+  flex-shrink: 0;
+}
+
+.category-toggle-btn {
+  padding: 8px;
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.category-toggle-btn:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+}
+
+.subcategories-dropdown {
+  padding-left: 32px;
+  padding-right: 12px;
+  margin-top: 4px;
+  margin-bottom: 8px;
+  border-left: 2px solid rgba(102, 126, 234, 0.2);
+  margin-left: 20px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
+    transform: translateY(0);
+  }
+}
+
+.subcategory-item-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  margin-bottom: 2px;
+}
+
+.subcategory-item-btn:hover {
+  background: rgba(102, 126, 234, 0.15);
+  color: #667eea;
+  transform: translateX(4px);
+}
+
+.subcategory-dot {
+  font-size: 20px;
+  line-height: 1;
+  color: #667eea;
+  flex-shrink: 0;
+}
+
+.subcategory-item-btn svg {
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  flex-shrink: 0;
+}
+
+.subcategory-item-btn:hover svg {
+  opacity: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .categories-list-sidebar {
+    max-height: 300px;
+  }
+
+  .subcategories-dropdown {
+    padding-left: 24px;
+    margin-left: 16px;
+  }
+}

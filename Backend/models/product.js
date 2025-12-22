@@ -20,6 +20,11 @@ const productSchema = new mongoose.Schema({
     ref: "Category",
     required: [true, "category is required"],
   },
+   subCategory: {
+    type: mongoose.Schema.Types.ObjectId,
+   
+   
+  },
   images: [
     {
       public_id: String,

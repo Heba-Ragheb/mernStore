@@ -6,6 +6,7 @@ function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('products');
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [subCategories, setSubCategories] = useState([]);
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState([]);
@@ -16,6 +17,7 @@ function AdminDashboard() {
     description: '',
     price: '',
     category: '',
+    subCategory:'',
     stock: '',
     discount: '',
   });
@@ -90,6 +92,7 @@ function AdminDashboard() {
     formData.append('description', productForm.description);
     formData.append('price', productForm.price);
     formData.append('category', productForm.category);
+    formData.append('subCategory', productForm.subCategory);
     formData.append('stock', productForm.stock);
     formData.append('discount', productForm.discount);
     
@@ -115,6 +118,7 @@ function AdminDashboard() {
         description: '', 
         price: '', 
         category: '', 
+        subCategory:'',
         stock: '', 
         discount: '' 
       });
@@ -449,6 +453,20 @@ function AdminDashboard() {
                 >
                   <option value="">Select Category</option>
                   {categories.map((cat) => (
+                    <option key={cat._id} value={cat._id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+                 <select
+                  value={productForm.subCategory}
+                  onChange={(e) =>
+                    setProductForm({ ...productForm, subCategory: e.target.value })
+                  }
+                  required
+                >
+                  <option value="">Select subCategory</option>
+                  {subCategories.map((cat) => (
                     <option key={cat._id} value={cat._id}>
                       {cat.name}
                     </option>

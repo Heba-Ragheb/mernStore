@@ -5,13 +5,26 @@ const subCategorySchema = mongoose.Schema({
         required:true,
         unique:true
     },
+    products:[
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref:"Product",
+            
+        }
+    ]
 })
 const CategorySchema = mongoose.Schema({
     name:{
         type:String,
         required:true,
         unique:true
-    },
+    }, products:[
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref:"Product",
+            
+        }
+    ],
      subcategories: [subCategorySchema],
 },{ timestamps: true })
 

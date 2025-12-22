@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Home.css';
 
@@ -9,14 +9,15 @@ function Home() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentOfferIndex, setCurrentOfferIndex] = useState(0);
+  const [expandedCategory, setExpandedCategory] = useState(null);
+  const navigate = useNavigate();
 
-  const API_URL = process.env.REACT_APP_API_URL ;
+  const API_URL = process.env.REACT_APP_API_URL;
 
   useEffect(() => {
     fetchData();
   }, []);
 
-  // Auto-slide offers every 4 seconds
   useEffect(() => {
     if (offers.length > 1) {
       const interval = setInterval(() => {
@@ -50,6 +51,35 @@ function Home() {
 
   const prevOffer = () => {
     setCurrentOfferIndex((prev) => (prev - 1 + offers.length) % offers.length);
+  };
+
+  const toggleCategory = (categoryId) => {
+    if (expandedCategory === categoryId) {
+      setExpandedCategory(null);
+    } else {
+      setExpandedCategory(categoryId);
+    }
+  };
+
+  const handleCategoryClick = (category, e) => {
+    e.preventDefault();
+    
+    // Check if category has subcategories
+    const hasSubcategories = category.subcategories && 
+                            Array.isArray(category.subcategories) && 
+                            category.subcategories.length > 0;
+    
+    if (hasSubcategories) {
+      // Show subcategories dropdown
+      toggleCategory(category._id);
+    } else {
+      // Navigate directly to category products
+      navigate(`/categories/${category._id}`);
+    }
+  };
+
+  const handleSubcategoryClick = (categoryId, subcategoryId) => {
+    navigate(`/categories/${categoryId}/subcategory/${subcategoryId}`);
   };
 
   if (loading) {
@@ -141,7 +171,7 @@ function Home() {
         </section>
       )}
 
-      {/* Categories Section */}
+      {/* Categories Section with Smart Navigation */}
       {categories.length > 0 && (
         <section className="categories-section">
           <div className="container">
@@ -149,30 +179,79 @@ function Home() {
               <h2 className="section-title">Shop by Category</h2>
               <p className="section-subtitle">Browse our popular categories</p>
             </div>
-            <div className="categories-grid">
-              {categories.map((category) => (
-                <Link 
-                  key={category._id} 
-                  to={`/categories/${category._id}`}
-                  className="category-card"
-                >
-                  <div className="category-icon">
-                    {category.image?.url ? (
-                      <img src={category.image.url} alt={category.name} />
-                    ) : (
-                      <div className="category-placeholder">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-                          <rect x="3" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
-                          <rect x="14" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
-                          <rect x="3" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
-                          <rect x="14" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
-                        </svg>
+            <div className="categories-grid-expanded">
+              {categories.map((category) => {
+                const hasSubcategories = category.subcategories && 
+                                        Array.isArray(category.subcategories) && 
+                                        category.subcategories.length > 0;
+                const isExpanded = expandedCategory === category._id;
+
+                return (
+                  <div key={category._id} className="category-card-expanded">
+                    <div 
+                      onClick={(e) => handleCategoryClick(category, e)}
+                      className="category-card-main clickable"
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <div className="category-icon">
+                        {category.image?.url ? (
+                          <img src={category.image.url} alt={category.name} />
+                        ) : (
+                          <div className="category-placeholder">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                              <rect x="3" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                              <rect x="14" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                              <rect x="3" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                              <rect x="14" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      <h3 className="category-name">{category.name}</h3>
+                      
+                      {hasSubcategories && (
+                        <div className="category-indicator">
+                          <svg 
+                            width="16" 
+                            height="16" 
+                            viewBox="0 0 24 24" 
+                            fill="none"
+                            style={{
+                              transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                              transition: 'transform 0.3s ease'
+                            }}
+                          >
+                            <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2"/>
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Subcategories List */}
+                    {hasSubcategories && (
+                      <div className="subcategories-wrapper">
+                        {isExpanded && (
+                          <div className="subcategories-list-home">
+                            {category.subcategories.map((sub) => (
+                              <button
+                                key={sub._id}
+                                onClick={() => handleSubcategoryClick(category._id, sub._id)}
+                                className="subcategory-link"
+                              >
+                                <span className="subcategory-dot">•</span>
+                                <span className="subcategory-name">{sub.name}</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                  <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2"/>
+                                </svg>
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
-                  <h3 className="category-name">{category.name}</h3>
-                </Link>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>
@@ -263,6 +342,125 @@ function Home() {
           </div>
         </div>
       </section>
+
+      <style jsx>{`
+        .categories-grid-expanded {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 24px;
+        }
+
+        .category-card-expanded {
+          background: white;
+          border-radius: 16px;
+          padding: 20px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+          transition: all 0.3s ease;
+        }
+
+        .category-card-expanded:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .category-card-main {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-decoration: none;
+          position: relative;
+          padding: 10px;
+          border-radius: 12px;
+          transition: background 0.2s ease;
+        }
+
+        .category-card-main.clickable:hover {
+          background: rgba(102, 126, 234, 0.05);
+        }
+
+        .category-indicator {
+          margin-top: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #667eea;
+        }
+
+        .subcategories-wrapper {
+          margin-top: 12px;
+          padding-top: 12px;
+          border-top: 1px solid #e5e7eb;
+        }
+
+        .subcategories-list-home {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .subcategory-link {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 12px;
+          background: #f9fafb;
+          border: none;
+          border-radius: 8px;
+          text-decoration: none;
+          color: #4b5563;
+          font-size: 14px;
+          font-weight: 500;
+          transition: all 0.2s ease;
+          cursor: pointer;
+          width: 100%;
+          text-align: left;
+        }
+
+        .subcategory-link:hover {
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          color: white;
+          transform: translateX(4px);
+        }
+
+        .subcategory-dot {
+          font-size: 20px;
+          line-height: 1;
+          flex-shrink: 0;
+        }
+
+        .subcategory-name {
+          flex: 1;
+        }
+
+        .subcategory-link svg {
+          margin-left: auto;
+          opacity: 0;
+          transition: opacity 0.2s ease;
+          flex-shrink: 0;
+        }
+
+        .subcategory-link:hover svg {
+          opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+          .categories-grid-expanded {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
     </div>
   );
 }

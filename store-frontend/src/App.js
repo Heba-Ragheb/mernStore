@@ -16,6 +16,8 @@ import AdminRoute from './components/AdminRoute';
 import './App.css';
 import SearchPage from './pages/SearchPage';
 import Footer from './components/Footer';
+import SubcategoryProducts from './pages/SubCategoryProducts';
+
 
 function App() {
   return (
@@ -28,10 +30,12 @@ function App() {
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/categories" element={<Categories />} />
           <Route path="/category/:id" element={<CategoryProducts />} />
+          <Route path="/categories/:categoryId" element={<CategoryProducts />} />
+          <Route path="/categories/:categoryId/subcategory/:subcategoryId" element={<SubcategoryProducts />} />          
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/search" element={<SearchPage />} />
-          
+
           {/* Protected Routes - Require Login */}
           <Route path="/cart" element={
             <PrivateRoute>
@@ -48,7 +52,7 @@ function App() {
               <Orders />
             </PrivateRoute>
           } />
-          
+
           {/* Admin Only Routes */}
           <Route path="/admin" element={
             <AdminRoute>

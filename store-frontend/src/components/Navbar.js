@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 import './Navbar.css';
 
 function Navbar() {
@@ -10,6 +11,25 @@ function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchActive, setSearchActive] = useState(false);
   const searchInputRef = useRef(null);
+  
+  // Categories state
+  const [categories, setCategories] = useState([]);
+  const [expandedCategories, setExpandedCategories] = useState([]);
+  const API_URL = process.env.REACT_APP_API_URL;
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/categorys/`);
+      console.log('Fetched categories:', res.data);
+      setCategories(res.data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -23,6 +43,34 @@ function Navbar() {
 
   const closeMenu = () => {
     setIsOpen(false);
+    setExpandedCategories([]);
+  };
+
+  const toggleCategoryExpansion = (categoryId, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (expandedCategories.includes(categoryId)) {
+      setExpandedCategories(expandedCategories.filter(id => id !== categoryId));
+    } else {
+      setExpandedCategories([...expandedCategories, categoryId]);
+    }
+  };
+
+  const handleCategoryClick = (category) => {
+    // If category has subcategories, expand them instead of navigating
+    if (category.subcategories && category.subcategories.length > 0) {
+      toggleCategoryExpansion(category._id, { preventDefault: () => {}, stopPropagation: () => {} });
+    } else {
+      // If no subcategories, navigate to category products page
+      navigate(`/categories/${category._id}`);
+      closeMenu();
+    }
+  };
+
+  const handleSubcategoryClick = (categoryId, subcategoryId) => {
+    navigate(`/categories/${categoryId}/subcategory/${subcategoryId}`);
+    closeMenu();
   };
 
   const handleSearch = (e) => {
@@ -48,7 +96,6 @@ function Navbar() {
     }
   };
 
-  // Close search when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       const searchContainer = document.querySelector('.navbar-search-expanded');
@@ -97,7 +144,6 @@ function Navbar() {
             </Link>
           </div>
 
-          {/* Expanded Search Overlay */}
           {searchActive && (
             <div className="navbar-search-expanded">
               <form onSubmit={handleSearch} className="navbar-search-form">
@@ -138,7 +184,6 @@ function Navbar() {
           )}
 
           <div className="navbar-right">
-            {/* Search Icon Button */}
             {!searchActive && (
               <button 
                 className="search-icon-btn"
@@ -152,7 +197,6 @@ function Navbar() {
               </button>
             )}
 
-            {/* Cart Icon */}
             <Link to="/cart" className="cart-icon-navbar">
               <svg viewBox="0 0 24 24" width="26" height="26" fill="none">
                 <circle cx="9" cy="21" r="1" stroke="currentColor" strokeWidth="2"/>
@@ -178,13 +222,11 @@ function Navbar() {
         </div>
       </nav>
 
-      {/* Overlay */}
       <div 
         className={`sidebar-overlay ${isOpen ? 'active' : ''}`} 
         onClick={closeMenu}
       ></div>
 
-      {/* Sidebar */}
       <div className={`sidebar ${isOpen ? 'active' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-logo">
@@ -204,7 +246,6 @@ function Navbar() {
           </button>
         </div>
 
-        {/* Sidebar Search */}
         <div className="sidebar-search">
           <form onSubmit={handleSearch}>
             <div className="sidebar-search-wrapper">
@@ -244,14 +285,87 @@ function Navbar() {
               <span>Products</span>
             </Link>
           </li>
-          <li>
-            <Link to="/categories" onClick={closeMenu}>
+
+          {/* Categories with Dropdown */}
+          <li className="categorie-section">
+            <div className="categories-header">
               <svg className="menu-icon-svg" viewBox="0 0 24 24" fill="none">
                 <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2v11z" stroke="currentColor" strokeWidth="2"/>
               </svg>
               <span>Categories</span>
-            </Link>
+            </div>
+            
+            {categories.length > 0 ? (
+              <div className="categories-list-sidebar">
+                {categories.map((category) => {
+                  const hasSubcategories = category.subcategories && 
+                                          Array.isArray(category.subcategories) && 
+                                          category.subcategories.length > 0;
+                  
+                  return (
+                    <div key={category._id} className="category-item-sidebar">
+                      <div className="category-header-sidebar">
+                        <button
+                          onClick={() => handleCategoryClick(category)}
+                          className="category-name-btn"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M3 7h18M3 12h18M3 17h18" stroke="currentColor" strokeWidth="2"/>
+                          </svg>
+                          {category.name}
+                        </button>
+                        
+                        {hasSubcategories && (
+                          <button
+                            onClick={(e) => toggleCategoryExpansion(category._id, e)}
+                            className="category-toggle-btn"
+                            aria-label={expandedCategories.includes(category._id) ? 'Collapse' : 'Expand'}
+                          >
+                            <svg 
+                              width="18" 
+                              height="18" 
+                              viewBox="0 0 24 24" 
+                              fill="none"
+                              style={{
+                                transform: expandedCategories.includes(category._id) ? 'rotate(180deg)' : 'rotate(0deg)',
+                                transition: 'transform 0.3s ease'
+                              }}
+                            >
+                              <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2"/>
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Subcategories Dropdown */}
+                      {expandedCategories.includes(category._id) && hasSubcategories && (
+                        <div className="subcategories-dropdown">
+                          {category.subcategories.map((sub) => (
+                            <button
+                              key={sub._id}
+                              onClick={() => handleSubcategoryClick(category._id, sub._id)}
+                              className="subcategory-item-btn"
+                            >
+                              <span className="subcategory-dot">•</span>
+                              {sub.name}
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2"/>
+                              </svg>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="no-categories-message">
+                <p>No categories available</p>
+              </div>
+            )}
           </li>
+
           {user && (
             <>
               <li>

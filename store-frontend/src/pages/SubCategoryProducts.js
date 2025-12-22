@@ -4,37 +4,67 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import './Products.css';
 
-function CategoryProducts() {
+function SubcategoryProducts() {
   const [products, setProducts] = useState([]);
   const [category, setCategory] = useState(null);
+  const [subcategory, setSubcategory] = useState(null);
   const [loading, setLoading] = useState(true);
   const { user, checkAuth } = useAuth();
-  const { categoryId } = useParams();
+  const { categoryId, subcategoryId } = useParams();
   const navigate = useNavigate();
   
   const API_URL = process.env.REACT_APP_API_URL;
 
   useEffect(() => {
-    fetchCategoryProducts();
-  }, [categoryId]);
+    fetchSubcategoryProducts();
+  }, [categoryId, subcategoryId]);
 
-  const fetchCategoryProducts = async () => {
+/*  const fetchSubcategoryProducts = async () => {
     try {
       setLoading(true);
-      // Get category details
-      const categoryRes = await axios.get(`${API_URL}/api/categorys/`);
-      const foundCategory = categoryRes.data.find(cat => cat._id === categoryId);
-      setCategory(foundCategory);
-
-      // Get products in this category
-      const productsRes = await axios.get(`${API_URL}/api/categorys/${categoryId}`);
-      setProducts(productsRes.data.products || []);
+      // Get subcategory and its products using the getSubCategoryProduct endpoint
+      const res = await axios.get(`${API_URL}/api/categorys/${categoryId}/sub/${subcategoryId}`);
+      
+      setCategory(res.data);
+      
+      // Find the specific subcategory
+      const foundSubcategory = res.data.subcategories.find(sub => sub._id === subcategoryId);
+      setSubcategory(foundSubcategory);
+      
+      // Get products from the subcategory
+      if (foundSubcategory && foundSubcategory.products) {
+        setProducts(foundSubcategory.products);
+      }
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
     }
-  };
+  };*/const fetchSubcategoryProducts = async () => {
+  try {
+    setLoading(true);
+
+    const res = await axios.get(
+      `${API_URL}/api/categorys/${categoryId}/sub/${subcategoryId}`
+    );
+
+    const categoryData = res.data;
+    setCategory(categoryData);
+
+    const foundSubcategory = categoryData.subcategories.find(
+      (sub) => sub._id === subcategoryId
+    );
+
+    setSubcategory(foundSubcategory);
+    setProducts(foundSubcategory?.products || []);
+
+  } catch (error) {
+    console.error(error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleAddToCart = async (e, productId, stock) => {
     e.preventDefault();
@@ -86,12 +116,14 @@ function CategoryProducts() {
         <div className="breadcrumb">
           <Link to="/">Home</Link>
           <span> / </span>
-          <span>{category?.name || 'Category'}</span>
+          <Link to={`/categories/${categoryId}`}>{category?.name || 'Category'}</Link>
+          <span> / </span>
+          <span>{subcategory?.name || 'Subcategory'}</span>
         </div>
 
-        <h1>{category?.name || 'Category Products'}</h1>
+        <h1>{subcategory?.name || 'Subcategory Products'}</h1>
         
-        {products.length === 0 ? (
+        {!products || products.length === 0 ? (
           <div className="no-products">
             <svg width="100" height="100" viewBox="0 0 24 24" fill="none">
               <rect x="3" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
@@ -99,12 +131,12 @@ function CategoryProducts() {
               <rect x="3" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
               <rect x="14" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
             </svg>
-            <p>No products available in this category</p>
-            <Link to="/" className="btn-back">
+            <p>No products available in this subcategory</p>
+            <Link to={`/categories/${categoryId}`} className="btn-back">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                 <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
               </svg>
-              Back to Home
+              Back to Category
             </Link>
           </div>
         ) : (
@@ -215,4 +247,4 @@ function CategoryProducts() {
   );
 }
 
-export default CategoryProducts;
+export default SubcategoryProducts;

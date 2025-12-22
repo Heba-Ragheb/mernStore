@@ -1,9 +1,11 @@
+
+import Category from "../models/category.js";
 import Product from "../models/product.js";
 import User from "../models/user.js";
 // ---------------------- Add Product ----------------------
 export const addProduct = async (req, res) => {
   try {
-    const { name, description, price, category,stock,discount } = req.body;
+    const { name, description, price, category,subCategory,stock,discount } = req.body;
     const userId = req.user._id
     const user = await User.findById(userId)
     if (!user || user.role == "User") {
@@ -34,12 +36,24 @@ export const addProduct = async (req, res) => {
       price,
       description,
       category,
+      subCategory,
       images,
       stock,
       finalPrice,
       discount
     });
-
+     if(!subCategory){
+      await Category.findByIdAndUpdate(category,{
+        $push:{
+          products:product._id
+        }
+      })
+    }else{
+    await Category.findOneAndUpdate({_id:category,"subcategories._id":subCategory},{
+    $push:{
+     "subcategories.$.products":product._id  }
+    } )}
+   
     res.status(201).json({ product });
   } catch (error) {
     console.error(error);
@@ -89,7 +103,17 @@ export const deleteProduct = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
 
     await Product.findByIdAndDelete(productId);
-
+    if(!product.subCategory){
+      await Category.findByIdAndUpdate(product.category,{
+        $pull:{
+          products:product._id
+        }
+      })
+    }else{
+    await Category.findOneAndUpdate({_id:product.category,"subcategories._id":product.subCategory},{
+    $pull:{
+     "subcategories.$.products":product._id  }
+    } )}
     res.status(200).json({ message: "Product deleted" });
   } catch (error) {
     console.error(error);
@@ -239,4 +263,4 @@ export const updateCartQuantity = async (req, res) => {
     console.error(error);
     res.status(500).json({ message: error.message });
   }
-};
+}; 
