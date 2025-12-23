@@ -6,10 +6,13 @@ import './Home.css';
 function Home() {
   const [offers, setOffers] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [bestSellerProducts, setBestSellerProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentOfferIndex, setCurrentOfferIndex] = useState(0);
+  const [currentBestSellerIndex, setCurrentBestSellerIndex] = useState(0);
   const [expandedCategory, setExpandedCategory] = useState(null);
+  const [recentlyViewedProducts, setRecentlyViewedProducts] = useState([]);
   const navigate = useNavigate();
 
   const API_URL = process.env.REACT_APP_API_URL;
@@ -26,18 +29,31 @@ function Home() {
       return () => clearInterval(interval);
     }
   }, [offers.length]);
+  useEffect(() => {
+  fetchRecentlyViewed();
+}, []);
+  useEffect(() => {
+    if (bestSellerProducts.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentBestSellerIndex((prev) => (prev + 1) % bestSellerProducts.length);
+      }, 4000);
+      return () => clearInterval(interval);
+    }
+  }, [bestSellerProducts.length]);
 
   const fetchData = async () => {
     try {
-      const [offersRes, productsRes, categoriesRes] = await Promise.all([
+      const [offersRes, productsRes, categoriesRes, bestSellerRes] = await Promise.all([
         axios.get(`${API_URL}/api/offer/`),
         axios.get(`${API_URL}/api/products/index`),
-        axios.get(`${API_URL}/api/categorys/`)
+        axios.get(`${API_URL}/api/categorys/`),
+        axios.get(`${API_URL}/api/products/bestseller?limit=6`)
       ]);
 
       setOffers(offersRes.data.offers || []);
       setFeaturedProducts(productsRes.data.products.slice(0, 8) || []);
       setCategories(categoriesRes.data.slice(0, 6) || []);
+      setBestSellerProducts(bestSellerRes.data.products || []);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -53,6 +69,14 @@ function Home() {
     setCurrentOfferIndex((prev) => (prev - 1 + offers.length) % offers.length);
   };
 
+  const nextBestSeller = () => {
+    setCurrentBestSellerIndex((prev) => (prev + 1) % bestSellerProducts.length);
+  };
+
+  const prevBestSeller = () => {
+    setCurrentBestSellerIndex((prev) => (prev - 1 + bestSellerProducts.length) % bestSellerProducts.length);
+  };
+
   const toggleCategory = (categoryId) => {
     if (expandedCategory === categoryId) {
       setExpandedCategory(null);
@@ -60,20 +84,30 @@ function Home() {
       setExpandedCategory(categoryId);
     }
   };
-
+  const fetchRecentlyViewed = async () => {
+  try {
+    const ids = JSON.parse(localStorage.getItem("recentlyViewed")) || [];
+    console.log('Recently viewed IDs from localStorage:', ids); // Debug log
+    
+    if (ids.length > 0) {
+      const response = await axios.post(`${API_URL}/api/products/recently-viewed`, { ids });
+      console.log('Recently viewed products:', response.data); // Debug log
+      setRecentlyViewedProducts(response.data || []);
+    }
+  } catch (error) {
+    console.error('Error fetching recently viewed:', error);
+  }
+};
   const handleCategoryClick = (category, e) => {
     e.preventDefault();
     
-    // Check if category has subcategories
     const hasSubcategories = category.subcategories && 
                             Array.isArray(category.subcategories) && 
                             category.subcategories.length > 0;
     
     if (hasSubcategories) {
-      // Show subcategories dropdown
       toggleCategory(category._id);
     } else {
-      // Navigate directly to category products
       navigate(`/categories/${category._id}`);
     }
   };
@@ -170,6 +204,182 @@ function Home() {
           </div>
         </section>
       )}
+      {recentlyViewedProducts.length > 0 && (
+  <section className="recently-viewed-section">
+    <div className="container">
+      <div className="section-header">
+        <div className="header-with-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="history-icon">
+            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+          <div>
+            <h2 className="section-title">Recently Viewed</h2>
+            <p className="section-subtitle">Continue where you left off</p>
+          </div>
+        </div>
+      </div>
+      <div className="recently-viewed-scroll">
+        <div className="recently-viewed-grid">
+          {recentlyViewedProducts.map((product, index) => (
+            <Link 
+              key={product._id} 
+              to={`/product/${product._id}`}
+              className="recently-viewed-card"
+              style={{ animationDelay: `${index * 0.1}s` }}
+            >
+              <div className="recently-badge">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" strokeWidth="2"/>
+                  <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke="currentColor" strokeWidth="2"/>
+                </svg>
+                Viewed
+              </div>
+              <div className="recently-image">
+                {product.images?.[0]?.url ? (
+                  <img src={product.images[0].url} alt={product.name} />
+                ) : (
+                  <div className="no-image">No Image</div>
+                )}
+              </div>
+              <div className="recently-info">
+                <h3 className="recently-name">{product.name}</h3>
+                <div className="recently-price-section">
+                  {product.discount > 0 ? (
+                    <>
+                      <span className="recently-price-old">${product.price}</span>
+                      <span className="recently-price">
+                        ${(product.price * (1 - product.discount / 100)).toFixed(2)}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="recently-price">${product.price}</span>
+                  )}
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+)}
+
+      {/* Best Sellers Section */}
+      {bestSellerProducts.length > 0 && (
+        <section className="bestseller-section">
+          <div className="container">
+            <div className="section-header">
+              <div className="header-content">
+                <span className="bestseller-badge">⭐ Top Rated</span>
+                <h2 className="section-title">Best Sellers</h2>
+                <p className="section-subtitle">Our most loved products by customers</p>
+              </div>
+            </div>
+            
+            <div className="bestseller-carousel">
+              <div className="bestseller-slider">
+                {bestSellerProducts.map((product, index) => (
+                  <div
+                    key={product._id}
+                    className={`bestseller-slide ${index === currentBestSellerIndex ? 'active' : ''}`}
+                     style={{
+      transform: `translateX(-${currentBestSellerIndex * 25}%)`
+    }}
+                  >
+                    <Link to={`/product/${product._id}`} className="bestseller-card-slider">
+                      <div className="bestseller-rank">#{index + 1}</div>
+                      <div className="bestseller-image">
+                        {product.images?.[0]?.url ? (
+                          <img src={product.images[0].url} alt={product.name} />
+                        ) : (
+                          <div className="no-image">No Image</div>
+                        )}
+                        {product.stock <= 0 && (
+                          <div className="out-of-stock-badge">Out of Stock</div>
+                        )}
+                        {product.stock > 0 && product.stock <= 5 && (
+                          <div className="low-stock-badge">Only {product.stock} left!</div>
+                        )}
+                        {product.discount > 0 && (
+                          <div className="discount-badge">-{product.discount}%</div>
+                        )}
+                      </div>
+                      <div className="bestseller-info">
+                        <div className="rating-stars">
+                          {[...Array(5)].map((_, i) => (
+                            <svg
+                              key={i}
+                              width="20"
+                              height="20"
+                              viewBox="0 0 24 24"
+                              fill={i < Math.floor(product.rating || 0) ? "#FFA500" : "none"}
+                              stroke={i < Math.floor(product.rating || 0) ? "#FFA500" : "#D1D5DB"}
+                              strokeWidth="2"
+                            >
+                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                            </svg>
+                          ))}
+                          <span className="rating-number">{product.rating?.toFixed(1) || '0.0'}</span>
+                        </div>
+                        <h3 className="bestseller-name">{product.name}</h3>
+                        <p className="bestseller-description">
+                          {product.description?.substring(0, 100)}...
+                        </p>
+                        <div className="bestseller-footer">
+                          <div className="price-section">
+                            {product.discount > 0 ? (
+                              <>
+                                <span className="price-old">${product.price}</span>
+                                <span className="price-new">
+                                  ${(product.price * (1 - product.discount / 100)).toFixed(2)}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="price-new">${product.price}</span>
+                            )}
+                          </div>
+                          <button className="cart-btn-bestseller">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                              <circle cx="9" cy="21" r="1" stroke="currentColor" strokeWidth="2"/>
+                              <circle cx="20" cy="21" r="1" stroke="currentColor" strokeWidth="2"/>
+                              <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" stroke="currentColor" strokeWidth="2"/>
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    </Link>
+                  </div>
+                ))}
+              </div>
+
+              {bestSellerProducts.length > 1 && (
+                <>
+                  <button className="bestseller-nav-btn prev" onClick={prevBestSeller}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  </button>
+                  <button className="bestseller-nav-btn next" onClick={nextBestSeller}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  </button>
+
+                  <div className="bestseller-dots">
+                    {bestSellerProducts.map((_, index) => (
+                      <button
+                        key={index}
+                        className={`dot ${index === currentBestSellerIndex ? 'active' : ''}`}
+                        onClick={() => setCurrentBestSellerIndex(index)}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Categories Section with Smart Navigation */}
       {categories.length > 0 && (
@@ -227,7 +437,6 @@ function Home() {
                       )}
                     </div>
 
-                    {/* Subcategories List */}
                     {hasSubcategories && (
                       <div className="subcategories-wrapper">
                         {isExpanded && (
@@ -343,7 +552,8 @@ function Home() {
         </div>
       </section>
 
-      <style jsx>{`
+     
+        <style jsx>{`
         .categories-grid-expanded {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -461,6 +671,7 @@ function Home() {
           }
         }
       `}</style>
+      
     </div>
   );
 }

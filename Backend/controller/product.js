@@ -285,3 +285,26 @@ export const relatedProduct = async(req,res)=>{
  
   }
 }
+export const bestSeller = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 5
+    const products = await Product.find().sort({rating:-1}).limit(limit);
+    res.status(200).json({ products });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+export const getRecentlyViewed = async (req, res) => {
+  try {
+    const ids = req.body.ids; // array of product IDs
+
+    const products = await Product.find({
+      _id: { $in: ids }
+    });
+
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

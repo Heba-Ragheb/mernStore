@@ -42,7 +42,24 @@ function ProductDetail() {
       setLoading(false);
     }
   };
-
+ useEffect(() => {
+  if (product && product._id) {
+    // Get existing recently viewed products from localStorage
+    const viewed = JSON.parse(localStorage.getItem("recentlyViewed")) || [];
+    
+    // Add current product to the beginning, remove duplicates
+    const updated = [
+      product._id,
+      ...viewed.filter(id => id !== product._id)
+    ].slice(0, 8); // Keep maximum 8 items
+    
+    // Save back to localStorage
+    localStorage.setItem("recentlyViewed", JSON.stringify(updated));
+    
+    console.log('Product added to recently viewed:', product._id);
+    console.log('All recently viewed:', updated);
+  }
+}, [product?._id]);
   const fetchReviews = async () => {
     try {
       const res = await axios.get(`${API_URL}/api/review/${id}`);
