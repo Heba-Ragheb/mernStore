@@ -40,7 +40,8 @@ const productSchema = new mongoose.Schema({
   },
  
   rating: {
-    type: Number
+    type: Number,
+     default:0
   },
   reviews: [] ,
   stock:{

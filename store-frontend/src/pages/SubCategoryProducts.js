@@ -10,61 +10,66 @@ function SubcategoryProducts() {
   const [subcategory, setSubcategory] = useState(null);
   const [loading, setLoading] = useState(true);
   const { user, checkAuth } = useAuth();
-  const { categoryId, subcategoryId } = useParams();
+  const { categoryId, subId } = useParams(); // Changed from subcategoryId to subId to match route
   const navigate = useNavigate();
   
   const API_URL = process.env.REACT_APP_API_URL;
 
   useEffect(() => {
-    fetchSubcategoryProducts();
-  }, [categoryId, subcategoryId]);
+    // Only fetch if both IDs are available
+    if (categoryId && subId) {
+      fetchSubcategoryProducts();
+    }
+  }, [categoryId, subId]);
 
-/*  const fetchSubcategoryProducts = async () => {
+  const fetchSubcategoryProducts = async () => {
     try {
       setLoading(true);
-      // Get subcategory and its products using the getSubCategoryProduct endpoint
-      const res = await axios.get(`${API_URL}/api/categorys/${categoryId}/sub/${subcategoryId}`);
+
+      const res = await axios.get(
+        `${API_URL}/api/categorys/${categoryId}/sub/${subId}`
+      );
+
       
-      setCategory(res.data);
-      
-      // Find the specific subcategory
-      const foundSubcategory = res.data.subcategories.find(sub => sub._id === subcategoryId);
-      setSubcategory(foundSubcategory);
-      
-      // Get products from the subcategory
-      if (foundSubcategory && foundSubcategory.products) {
-        setProducts(foundSubcategory.products);
+
+  
+      if (res.data.products && Array.isArray(res.data.products)) {
+        setProducts(res.data.products);
+        
+            if (res.data.products.length > 0) {
+          const firstProduct = res.data.products[0];
+                 try {
+               const categoriesRes = await axios.get(`${API_URL}/api/categorys`);
+              
+            const foundCategory = categoriesRes.data.find(cat => cat._id === categoryId);
+            if (foundCategory) {
+              setCategory(foundCategory);
+              
+              // Find subcategory in the category
+              const foundSubcategory = foundCategory.subcategories?.find(
+                (sub) => sub._id === subId
+              );
+              setSubcategory(foundSubcategory);
+            }
+          } catch (err) {
+            console.error('Error fetching categories:', err);
+          }
+        }
+      } else {
+        console.error('Unexpected API response structure:');
       }
+
     } catch (error) {
-      console.error(error);
+      console.error('Error fetching subcategory products:', error);
+      // Handle error gracefully
+      if (error.response?.status === 404) {
+        alert('Subcategory not found');
+        navigate('/');
+      }
     } finally {
       setLoading(false);
     }
-  };*/const fetchSubcategoryProducts = async () => {
-  try {
-    setLoading(true);
-
-    const res = await axios.get(
-      `${API_URL}/api/categorys/${categoryId}/sub/${subcategoryId}`
-    );
-
-    const categoryData = res.data;
-    setCategory(categoryData);
-
-    const foundSubcategory = categoryData.subcategories.find(
-      (sub) => sub._id === subcategoryId
-    );
-
-    setSubcategory(foundSubcategory);
-    setProducts(foundSubcategory?.products || []);
-
-  } catch (error) {
-    console.error(error);
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   const handleAddToCart = async (e, productId, stock) => {
     e.preventDefault();
@@ -106,6 +111,22 @@ function SubcategoryProducts() {
     return (
       <div className="loading-container">
         <div className="loading-spinner"></div>
+      </div>
+    );
+  }
+
+  // Check if parameters are missing
+  if (!categoryId || !subId) {
+    return (
+      <div className="products-page">
+        <div className="container">
+          <div className="no-products">
+            <p>Invalid URL parameters</p>
+            <Link to="/" className="btn-back">
+              Back to Home
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }

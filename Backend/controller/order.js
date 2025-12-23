@@ -41,6 +41,7 @@ export const addOrder = async (req, res) => {
 
       // Reduce stock FIRST
       product.stock -= item.quantity;
+      product.rating += 1 ;
       await product.save();
 
       // Calculate total

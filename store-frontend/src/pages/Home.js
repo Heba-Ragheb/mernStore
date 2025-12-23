@@ -79,7 +79,7 @@ function Home() {
   };
 
   const handleSubcategoryClick = (categoryId, subcategoryId) => {
-    navigate(`/categories/${categoryId}/subcategory/${subcategoryId}`);
+    navigate(`/categories/${categoryId}/sub/${subcategoryId}`);
   };
 
   if (loading) {

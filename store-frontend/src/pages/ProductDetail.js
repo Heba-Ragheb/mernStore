@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import './ProductDetail.css';
@@ -11,6 +11,7 @@ function ProductDetail() {
 
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
+  const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
   const [addingToCart, setAddingToCart] = useState(false);
@@ -27,6 +28,8 @@ function ProductDetail() {
   useEffect(() => {
     fetchProduct();
     fetchReviews();
+    fetchRelatedProducts();
+    window.scrollTo(0, 0); // Scroll to top when product changes
   }, [id]);
 
   const fetchProduct = async () => {
@@ -46,6 +49,28 @@ function ProductDetail() {
       setReviews(res.data.reviews || []);
     } catch (error) {
       console.error('Error fetching reviews:', error);
+    }
+  };
+
+  const fetchRelatedProducts = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/products/relatedProducts/${id}`);
+      console.log('Related products response:', res.data);
+      
+      // Handle different response structures
+      if (Array.isArray(res.data)) {
+        // If response is directly an array
+        setRelatedProducts(res.data);
+      } else if (res.data.products && Array.isArray(res.data.products)) {
+        // If response is { products: [...] }
+        setRelatedProducts(res.data.products);
+      } else {
+        console.warn('Unexpected related products structure:', res.data);
+        setRelatedProducts([]);
+      }
+    } catch (error) {
+      console.error('Error fetching related products:', error);
+      setRelatedProducts([]);
     }
   };
 
@@ -76,6 +101,35 @@ function ProductDetail() {
       alert(error.response?.data?.message || 'Failed to add to cart');
     } finally {
       setAddingToCart(false);
+    }
+  };
+
+  const handleAddRelatedToCart = async (e, productId, stock) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!user) {
+      alert('Please login to add items to cart');
+      navigate('/login');
+      return;
+    }
+
+    if (stock === 0) {
+      alert('Sorry, this product is out of stock');
+      return;
+    }
+
+    try {
+      await axios.post(
+        `${API_URL}/api/products/addToCard/${productId}`,
+        {},
+        { withCredentials: true }
+      );
+      await checkAuth();
+      alert('Product added to cart!');
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || 'Failed to add to cart');
     }
   };
 
@@ -110,7 +164,7 @@ function ProductDetail() {
       setReviewText('');
       setRating(0);
       setShowReviewForm(false);
-      fetchReviews(); // Refresh reviews
+      fetchReviews();
     } catch (error) {
       console.error(error);
       alert(error.response?.data?.message || 'Failed to submit review');
@@ -138,6 +192,13 @@ function ProductDetail() {
     if (reviews.length === 0) return 0;
     const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
     return (sum / reviews.length).toFixed(1);
+  };
+
+  const calculateFinalPrice = (price, discount) => {
+    if (discount > 0) {
+      return (price * (1 - discount / 100)).toFixed(2);
+    }
+    return price;
   };
 
   const renderStars = (rating, interactive = false) => {
@@ -353,6 +414,73 @@ function ProductDetail() {
           </div>
         </div>
 
+        {/* Related Products Section */}
+        {relatedProducts.length > 0 && (
+          <div className="related-products-section">
+            <h2>You May Also Like</h2>
+            <div className="related-products-grid">
+              {relatedProducts.slice(0, 4).map((relatedProduct) => {
+                const isRelatedOutOfStock = relatedProduct.stock === 0;
+                const isRelatedLowStock = relatedProduct.stock > 0 && relatedProduct.stock <= 5;
+                const relatedFinalPrice = calculateFinalPrice(relatedProduct.price, relatedProduct.discount);
+
+                return (
+                  <Link
+                    key={relatedProduct._id}
+                    to={`/product/${relatedProduct._id}`}
+                    className="related-product-card"
+                  >
+                    <div className="related-product-image">
+                      {relatedProduct.images?.[0]?.url ? (
+                        <img src={relatedProduct.images[0].url} alt={relatedProduct.name} />
+                      ) : (
+                        <div className="no-image">No Image</div>
+                      )}
+                      
+                      {relatedProduct.discount > 0 && !isRelatedOutOfStock && (
+                        <span className="related-discount-badge">
+                          -{relatedProduct.discount}%
+                        </span>
+                      )}
+                      {isRelatedOutOfStock && (
+                        <span className="related-stock-badge out">
+                          Out of Stock
+                        </span>
+                      )}
+                      {isRelatedLowStock && !isRelatedOutOfStock && (
+                        <span className="related-stock-badge low">
+                          Only {relatedProduct.stock} left
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="related-product-info">
+                      <h3>{relatedProduct.name}</h3>
+                      <div className="related-product-price">
+                        {relatedProduct.discount > 0 ? (
+                          <>
+                            <span className="old-price">${relatedProduct.price}</span>
+                            <span className="new-price">${relatedFinalPrice}</span>
+                          </>
+                        ) : (
+                          <span className="new-price">${relatedProduct.price}</span>
+                        )}
+                      </div>
+                      <button
+                        onClick={(e) => handleAddRelatedToCart(e, relatedProduct._id, relatedProduct.stock)}
+                        className={`btn-quick-add ${isRelatedOutOfStock ? 'disabled' : ''}`}
+                        disabled={isRelatedOutOfStock}
+                      >
+                        {isRelatedOutOfStock ? 'Out of Stock' : 'Quick Add'}
+                      </button>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Reviews Section */}
         <div className="reviews-section">
           <div className="reviews-header">
@@ -455,6 +583,157 @@ function ProductDetail() {
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        .related-products-section {
+          margin: 60px 0;
+          padding: 40px 0;
+          border-top: 1px solid #e5e7eb;
+        }
+
+        .related-products-section h2 {
+          font-size: 28px;
+          font-weight: 700;
+          margin-bottom: 30px;
+          color: #111827;
+        }
+
+        .related-products-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+          gap: 24px;
+        }
+
+        .related-product-card {
+          background: white;
+          border: 2px solid #e5e7eb;
+          border-radius: 12px;
+          overflow: hidden;
+          transition: all 0.3s ease;
+          text-decoration: none;
+          color: inherit;
+        }
+
+        .related-product-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+          border-color: #667eea;
+        }
+
+        .related-product-image {
+          position: relative;
+          padding-top: 100%;
+          overflow: hidden;
+          background: #f9fafb;
+        }
+
+        .related-product-image img {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .related-discount-badge {
+          position: absolute;
+          top: 12px;
+          left: 12px;
+          background: linear-gradient(135deg, #f59e0b, #ef4444);
+          color: white;
+          padding: 6px 12px;
+          border-radius: 6px;
+          font-size: 12px;
+          font-weight: 700;
+        }
+
+        .related-stock-badge {
+          position: absolute;
+          top: 12px;
+          right: 12px;
+          padding: 6px 12px;
+          border-radius: 6px;
+          font-size: 11px;
+          font-weight: 600;
+          color: white;
+        }
+
+        .related-stock-badge.out {
+          background: #ef4444;
+        }
+
+        .related-stock-badge.low {
+          background: #f59e0b;
+        }
+
+        .related-product-info {
+          padding: 16px;
+        }
+
+        .related-product-info h3 {
+          font-size: 16px;
+          font-weight: 600;
+          margin-bottom: 8px;
+          color: #111827;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .related-product-price {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 12px;
+        }
+
+        .related-product-price .old-price {
+          text-decoration: line-through;
+          color: #9ca3af;
+          font-size: 14px;
+        }
+
+        .related-product-price .new-price {
+          font-size: 18px;
+          font-weight: 700;
+          color: #667eea;
+        }
+
+        .btn-quick-add {
+          width: 100%;
+          padding: 10px;
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          color: white;
+          border: none;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .btn-quick-add:hover:not(.disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-quick-add.disabled {
+          background: #9ca3af;
+          cursor: not-allowed;
+        }
+
+        @media (max-width: 768px) {
+          .related-products-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+          }
+
+          .related-products-section h2 {
+            font-size: 24px;
+          }
+        }
+      `}</style>
     </div>
   );
 }

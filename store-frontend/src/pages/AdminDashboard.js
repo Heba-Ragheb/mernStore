@@ -1,15 +1,21 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 import './AdminDashboard.css';
 
 function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('products');
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [subCategories, setSubCategories] = useState([]);
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState([]);
+  
+  // Sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedSubcategory, setSelectedSubcategory] = useState(null);
+  const [filteredProducts, setFilteredProducts] = useState([]);
 
   // Product Form
   const [productForm, setProductForm] = useState({
@@ -17,11 +23,12 @@ function AdminDashboard() {
     description: '',
     price: '',
     category: '',
-    subCategory:'',
+    subCategory: '',
     stock: '',
     discount: '',
   });
   const [productImages, setProductImages] = useState([]);
+  const [availableSubcategories, setAvailableSubcategories] = useState([]);
 
   // Category Form
   const [categoryForm, setCategoryForm] = useState({ name: '' });
@@ -36,7 +43,7 @@ function AdminDashboard() {
   // Offer Form
   const [offerImage, setOfferImage] = useState(null);
 
-  const API_URL = process.env.REACT_APP_API_URL ;
+  const API_URL = process.env.REACT_APP_API_URL;
 
   useEffect(() => {
     fetchProducts();
@@ -45,10 +52,48 @@ function AdminDashboard() {
     fetchOrders();
   }, []);
 
+  useEffect(() => {
+    if (productForm.category) {
+      const selectedCat = categories.find(cat => cat._id === productForm.category);
+      setAvailableSubcategories(selectedCat?.subcategories || []);
+      setProductForm(prev => ({ ...prev, subCategory: '' }));
+    } else {
+      setAvailableSubcategories([]);
+    }
+  }, [productForm.category, categories]);
+
+  // Filter products based on sidebar selection
+  useEffect(() => {
+    filterProducts();
+  }, [selectedCategory, selectedSubcategory, products]);
+
+  const filterProducts = () => {
+  if (!selectedCategory) {
+    setFilteredProducts(products);
+    return;
+  }
+
+  if (selectedSubcategory) {
+    // Filter by subcategory - compare subCategory ID (string) with selectedSubcategory (string)
+    const filtered = products.filter(p => 
+      p.subCategory === selectedSubcategory
+    );
+    console.log('Filtered by subcategory:', selectedSubcategory, filtered);
+    setFilteredProducts(filtered);
+  } else {
+    // Filter by category only - compare category object's _id with selectedCategory
+    const filtered = products.filter(p => 
+      p.category && p.category._id === selectedCategory
+    );
+    console.log('Filtered by category:', selectedCategory, filtered);
+    setFilteredProducts(filtered);
+  }
+};
   const fetchProducts = async () => {
     try {
       const res = await axios.get(`${API_URL}/api/products/index`);
       setProducts(res.data.products);
+      setFilteredProducts(res.data.products);
     } catch (error) {
       console.error(error);
     }
@@ -83,6 +128,26 @@ function AdminDashboard() {
     }
   };
 
+  const handleCategoryClick = (categoryId) => {
+    if (selectedCategory === categoryId) {
+      setSelectedCategory(null);
+      setSelectedSubcategory(null);
+    } else {
+      setSelectedCategory(categoryId);
+      setSelectedSubcategory(null);
+    }
+  };
+
+  const handleSubcategoryClick = (categoryId, subcategoryId) => {
+    setSelectedCategory(categoryId);
+    setSelectedSubcategory(subcategoryId);
+  };
+
+  const clearFilters = () => {
+    setSelectedCategory(null);
+    setSelectedSubcategory(null);
+  };
+
   const handleAddProduct = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -92,9 +157,13 @@ function AdminDashboard() {
     formData.append('description', productForm.description);
     formData.append('price', productForm.price);
     formData.append('category', productForm.category);
-    formData.append('subCategory', productForm.subCategory);
+    
+    if (productForm.subCategory) {
+      formData.append('subCategory', productForm.subCategory);
+    }
+    
     formData.append('stock', productForm.stock);
-    formData.append('discount', productForm.discount);
+    formData.append('discount', productForm.discount || 0);
     
     if (productImages.length === 1) {
       formData.append('image', productImages[0]);
@@ -118,11 +187,12 @@ function AdminDashboard() {
         description: '', 
         price: '', 
         category: '', 
-        subCategory:'',
+        subCategory: '',
         stock: '', 
         discount: '' 
       });
       setProductImages([]);
+      setAvailableSubcategories([]);
       fetchProducts();
     } catch (error) {
       console.error(error);
@@ -202,6 +272,7 @@ function AdminDashboard() {
       });
       alert('Category deleted successfully');
       fetchCategories();
+      clearFilters();
     } catch (error) {
       console.error(error);
       alert('Failed to delete category');
@@ -264,6 +335,9 @@ function AdminDashboard() {
       );
       alert('Subcategory deleted successfully');
       fetchCategories();
+      if (selectedSubcategory === subId) {
+        setSelectedSubcategory(null);
+      }
     } catch (error) {
       console.error(error);
       alert('Failed to delete subcategory');
@@ -315,7 +389,7 @@ function AdminDashboard() {
   const handleStatusChange = async (orderId, newStatus) => {
     try {
       await axios.put(
-        `${API_URL}/api/order/updateStatus/${orderId}`,
+        `${API_URL}/api/order/status/${orderId}`,
         { status: newStatus },
         { withCredentials: true }
       );
@@ -361,167 +435,266 @@ function AdminDashboard() {
       : <span className="payment-status-badge unpaid">⏳ Unpaid</span>;
   };
 
+  const getSelectedCategoryName = () => {
+    if (!selectedCategory) return 'All Products';
+    const category = categories.find(c => c._id === selectedCategory);
+    if (!selectedSubcategory) return category?.name || 'Category';
+    const subcategory = category?.subcategories.find(s => s._id === selectedSubcategory);
+    return `${category?.name} > ${subcategory?.name}` || 'Products';
+  };
+
   return (
     <div className="admin-dashboard">
-      <div className="container">
-        <h1>Admin Dashboard</h1>
+      <div className="admin-layout">
+        {/* Sidebar */}
+        <div className={`admin-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
+          <button 
+            className="sidebar-toggle"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            {sidebarOpen ? '◀' : '▶'}
+          </button>
 
-        <div className="tabs">
-          <button
-            className={activeTab === 'products' ? 'active' : ''}
-            onClick={() => setActiveTab('products')}
-          >
-            Products
-          </button>
-          <button
-            className={activeTab === 'categories' ? 'active' : ''}
-            onClick={() => setActiveTab('categories')}
-          >
-            Categories
-          </button>
-          <button
-            className={activeTab === 'offers' ? 'active' : ''}
-            onClick={() => setActiveTab('offers')}
-          >
-            Offers
-          </button>
-          <button
-            className={activeTab === 'orders' ? 'active' : ''}
-            onClick={() => setActiveTab('orders')}
-          >
-            Orders ({orders.length})
-          </button>
+          {sidebarOpen && (
+            <div className="sidebar-content">
+              <h3 className="sidebar-title">Categories</h3>
+              
+            <button 
+  className={`sidebar-item all-products ${!selectedCategory ? 'active' : ''}`}
+  onClick={clearFilters}
+>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <rect x="3" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+    <rect x="14" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+    <rect x="3" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+    <rect x="14" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+  </svg>
+  All Products ({products.length})
+</button>
+              {categories.map((category) => (
+                <div key={category._id} className="category-group">
+                 <button
+  className={`sidebar-item category ${selectedCategory === category._id && !selectedSubcategory ? 'active' : ''}`}
+  onClick={() => handleCategoryClick(category._id)}
+>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <path d="M3 7h18M3 12h18M3 17h18" stroke="currentColor" strokeWidth="2"/>
+  </svg>
+  {category.name}
+  <span className="category-count">
+    ({products.filter(p => p.category && p.category._id === category._id).length})
+  </span>
+</button>
+
+                  {selectedCategory === category._id && category.subcategories && category.subcategories.length > 0 && (
+  <div className="subcategory-list">
+    {category.subcategories.map((sub) => (
+      <button
+        key={sub._id}
+        className={`sidebar-item subcategory ${selectedSubcategory === sub._id ? 'active' : ''}`}
+        onClick={() => handleSubcategoryClick(category._id, sub._id)}
+      >
+        <span className="subcategory-dot">•</span>
+        {sub.name}
+        <span className="category-count">
+          ({products.filter(p => p.subCategory === sub._id).length})
+        </span>
+      </button>
+    ))}
+  </div>
+)}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {activeTab === 'products' && (
-          <div className="tab-content">
-            <div className="form-section">
-              <h2>Add New Product</h2>
-              <form onSubmit={handleAddProduct} className="admin-form">
-                <input
-                  type="text"
-                  placeholder="Product Name"
-                  value={productForm.name}
-                  onChange={(e) =>
-                    setProductForm({ ...productForm, name: e.target.value })
-                  }
-                  required
-                />
-                <textarea
-                  placeholder="Description"
-                  value={productForm.description}
-                  onChange={(e) =>
-                    setProductForm({
-                      ...productForm,
-                      description: e.target.value,
-                    })
-                  }
-                  required
-                />
-                <input
-                  type="number"
-                  placeholder="Price"
-                  value={productForm.price}
-                  onChange={(e) =>
-                    setProductForm({ ...productForm, price: e.target.value })
-                  }
-                  required
-                />
-                <input
-                  type="number"
-                  placeholder="Stock"
-                  value={productForm.stock}
-                  onChange={(e) =>
-                    setProductForm({ ...productForm, stock: e.target.value })
-                  }
-                  required
-                />
-                <input
-                  type="number"
-                  placeholder="Discount (%)"
-                  value={productForm.discount}
-                  onChange={(e) =>
-                    setProductForm({ ...productForm, discount: e.target.value })
-                  }
-                />
-                <select
-                  value={productForm.category}
-                  onChange={(e) =>
-                    setProductForm({ ...productForm, category: e.target.value })
-                  }
-                  required
-                >
-                  <option value="">Select Category</option>
-                  {categories.map((cat) => (
-                    <option key={cat._id} value={cat._id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
-                 <select
-                  value={productForm.subCategory}
-                  onChange={(e) =>
-                    setProductForm({ ...productForm, subCategory: e.target.value })
-                  }
-                  required
-                >
-                  <option value="">Select subCategory</option>
-                  {subCategories.map((cat) => (
-                    <option key={cat._id} value={cat._id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={(e) => setProductImages([...e.target.files])}
-                  required
-                />
-                <button type="submit" disabled={loading}>
-                  {loading ? 'Adding...' : 'Add Product'}
-                </button>
-              </form>
+        {/* Main Content */}
+        <div className="admin-content">
+          <div className="container">
+            <h1>Admin Dashboard</h1>
+
+            <div className="tabs">
+              <button
+                className={activeTab === 'products' ? 'active' : ''}
+                onClick={() => setActiveTab('products')}
+              >
+                Products
+              </button>
+              <button
+                className={activeTab === 'categories' ? 'active' : ''}
+                onClick={() => setActiveTab('categories')}
+              >
+                Categories
+              </button>
+              <button
+                className={activeTab === 'offers' ? 'active' : ''}
+                onClick={() => setActiveTab('offers')}
+              >
+                Offers
+              </button>
+              <button
+                className={activeTab === 'orders' ? 'active' : ''}
+                onClick={() => setActiveTab('orders')}
+              >
+                Orders ({orders.length})
+              </button>
             </div>
 
-            <div className="list-section">
-              <h2>All Products ({products.length})</h2>
-              <div className="admin-table">
-                {products.map((product) => (
-                  <div key={product._id} className="admin-item">
-                    <img src={product.images[0]?.url} alt={product.name} />
-                    <div className="item-info">
-                      <h3>{product.name}</h3>
-                      <div className="product-price-info">
-                        {product.discount > 0 ? (
-                          <>
-                            <span className="old-price">${product.price}</span>
-                            <span className="new-price">
-                              ${(product.price * (1 - product.discount / 100)).toFixed(2)}
-                            </span>
-                            <span className="discount-tag">-{product.discount}%</span>
-                          </>
-                        ) : (
-                          <span className="new-price">${product.price}</span>
-                        )}
-                      </div>
-                      <p className="stock-info">Stock: {product.stock || 0}</p>
-                    </div>
-                    <button
-                      onClick={() => handleDeleteProduct(product._id)}
-                      className="btn-delete"
+            {activeTab === 'products' && (
+              <div className="tab-content">
+                {/* Add Product Form */}
+                <div className="form-section">
+                  <h2>Add New Product</h2>
+                  <form onSubmit={handleAddProduct} className="admin-form">
+                    <input
+                      type="text"
+                      placeholder="Product Name"
+                      value={productForm.name}
+                      onChange={(e) =>
+                        setProductForm({ ...productForm, name: e.target.value })
+                      }
+                      required
+                    />
+                    <textarea
+                      placeholder="Description"
+                      value={productForm.description}
+                      onChange={(e) =>
+                        setProductForm({
+                          ...productForm,
+                          description: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                    <input
+                      type="number"
+                      placeholder="Price"
+                      value={productForm.price}
+                      onChange={(e) =>
+                        setProductForm({ ...productForm, price: e.target.value })
+                      }
+                      required
+                    />
+                    <input
+                      type="number"
+                      placeholder="Stock"
+                      value={productForm.stock}
+                      onChange={(e) =>
+                        setProductForm({ ...productForm, stock: e.target.value })
+                      }
+                      required
+                    />
+                    <input
+                      type="number"
+                      placeholder="Discount (%)"
+                      value={productForm.discount}
+                      onChange={(e) =>
+                        setProductForm({ ...productForm, discount: e.target.value })
+                      }
+                    />
+                    
+                    <select
+                      value={productForm.category}
+                      onChange={(e) =>
+                        setProductForm({ ...productForm, category: e.target.value })
+                      }
+                      required
                     >
-                      Delete
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+                      <option value="">Select Category *</option>
+                      {categories.map((cat) => (
+                        <option key={cat._id} value={cat._id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
 
-        {activeTab === 'categories' && (
+                    {productForm.category && (
+                      <select
+                        value={productForm.subCategory}
+                        onChange={(e) =>
+                          setProductForm({ ...productForm, subCategory: e.target.value })
+                        }
+                      >
+                        <option value="">Select Subcategory (Optional)</option>
+                        {availableSubcategories.map((sub) => (
+                          <option key={sub._id} value={sub._id}>
+                            {sub.name}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={(e) => setProductImages([...e.target.files])}
+                      required
+                    />
+                    
+                    {productImages.length > 0 && (
+                      <div className="image-preview-count">
+                        {productImages.length} image(s) selected
+                      </div>
+                    )}
+
+                    <button type="submit" disabled={loading}>
+                      {loading ? 'Adding...' : 'Add Product'}
+                    </button>
+                  </form>
+                </div>
+
+                {/* Products List */}
+                <div className="list-section">
+                  <div className="section-header-with-filter">
+                    <h2>{getSelectedCategoryName()} ({filteredProducts.length})</h2>
+                    {(selectedCategory || selectedSubcategory) && (
+                      <button onClick={clearFilters} className="btn-clear-filter">
+                        Clear Filter
+                      </button>
+                    )}
+                  </div>
+                  <div className="admin-table">
+                    {filteredProducts.map((product) => (
+                      <div key={product._id} className="admin-item">
+                        <img src={product.images[0]?.url} alt={product.name} />
+                        <div className="item-info">
+                          <h3>{product.name}</h3>
+                          <p className="product-category-info">
+                            {product.category?.name || 'No Category'}
+                            {product.subCategory && ` > Subcategory`}
+                          </p>
+                          <div className="product-price-info">
+                            {product.discount > 0 ? (
+                              <>
+                                <span className="old-price">${product.price}</span>
+                                <span className="new-price">
+                                  ${(product.price * (1 - product.discount / 100)).toFixed(2)}
+                                </span>
+                                <span className="discount-tag">-{product.discount}%</span>
+                              </>
+                            ) : (
+                              <span className="new-price">${product.price}</span>
+                            )}
+                          </div>
+                          <p className="stock-info">Stock: {product.stock || 0}</p>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteProduct(product._id)}
+                          className="btn-delete"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Categories, Offers, Orders tabs remain the same */}
+            {activeTab === 'categories' && (
           <div className="tab-content">
             <div className="form-section">
               <h2>Add New Category</h2>
@@ -875,42 +1048,154 @@ function AdminDashboard() {
           </div>
         )}
       </div>
-
+</div>
+</div>
       <style jsx>{`
-        .payment-badge {
-          padding: 4px 12px;
-          border-radius: 12px;
-          font-size: 12px;
+        .admin-layout {
+          display: flex;
+          min-height: 100vh;
+        }
+
+        .admin-sidebar {
+          width: 280px;
+          background: white;
+          border-right: 2px solid #e5e7eb;
+          position: sticky;
+          top: 0;
+          height: 100vh;
+          overflow-y: auto;
+          transition: all 0.3s ease;
+        }
+
+        .admin-sidebar.closed {
+          width: 60px;
+        }
+
+        .sidebar-toggle {
+          width: 100%;
+          padding: 15px;
+          background: #667eea;
+          color: white;
+          border: none;
+          cursor: pointer;
+          font-size: 18px;
+          transition: background 0.3s;
+        }
+
+        .sidebar-toggle:hover {
+          background: #5568d3;
+        }
+
+        .sidebar-content {
+          padding: 20px;
+        }
+
+        .sidebar-title {
+          font-size: 18px;
+          font-weight: 700;
+          color: #111827;
+          margin: 0 0 16px 0;
+        }
+
+        .sidebar-item {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px 16px;
+          background: transparent;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 500;
+          color: #4b5563;
+          text-align: left;
+          transition: all 0.2s ease;
+          margin-bottom: 4px;
+        }
+
+        .sidebar-item:hover {
+          background: #f3f4f6;
+          color: #111827;
+        }
+
+        .sidebar-item.active {
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          color: white;
+        }
+
+        .sidebar-item.all-products {
+          margin-bottom: 12px;
           font-weight: 600;
-          display: inline-block;
         }
-        
-        .payment-badge.online {
-          background: #dbeafe;
-          color: #1e40af;
+
+        .category-group {
+          margin-bottom: 8px;
         }
-        
-        .payment-badge.cash {
-          background: #d1fae5;
-          color: #065f46;
-        }
-        
-        .payment-status-badge {
-          padding: 4px 12px;
-          border-radius: 12px;
+
+        .category-count {
+          margin-left: auto;
           font-size: 12px;
+          opacity: 0.7;
+        }
+
+        .subcategory-list {
+          padding-left: 16px;
+          margin-top: 4px;
+        }
+
+        .sidebar-item.subcategory {
+          font-size: 13px;
+          padding: 8px 12px;
+        }
+
+        .subcategory-dot {
+          font-size: 20px;
+          line-height: 1;
+        }
+
+        .admin-content {
+          flex: 1;
+          overflow-x: hidden;
+        }
+
+        .section-header-with-filter {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+
+        .btn-clear-filter {
+          padding: 8px 16px;
+          background: #ef4444;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 14px;
           font-weight: 600;
-          display: inline-block;
         }
-        
-        .payment-status-badge.paid {
-          background: #d1fae5;
-          color: #065f46;
+
+        .btn-clear-filter:hover {
+          background: #dc2626;
         }
-        
-        .payment-status-badge.unpaid {
-          background: #fef3c7;
-          color: #92400e;
+
+        @media (max-width: 768px) {
+          .admin-sidebar {
+            position: fixed;
+            z-index: 1000;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+          }
+
+          .admin-sidebar.closed {
+            transform: translateX(-100%);
+          }
+
+          .admin-content {
+            width: 100%;
+          }
         }
       `}</style>
     </div>

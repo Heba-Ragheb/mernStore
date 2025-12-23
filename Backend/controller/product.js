@@ -1,7 +1,9 @@
 
+import { populate } from "dotenv";
 import Category from "../models/category.js";
 import Product from "../models/product.js";
 import User from "../models/user.js";
+import mongoose from "mongoose";
 // ---------------------- Add Product ----------------------
 export const addProduct = async (req, res) => {
   try {
@@ -77,7 +79,7 @@ export const showProduct = async (req, res) => {
   try {
     const productId = req.params.id;
 
-    const product = await Product.findById(productId);
+    const product = await Product.findById(productId).populate('category');
 
     if (!product)
       return res.status(404).json({ message: "Product not found" });
@@ -264,3 +266,22 @@ export const updateCartQuantity = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 }; 
+export const relatedProduct = async(req,res)=>{
+  try {
+    const productId = req.params.id
+    const product = await Product.findById(productId)
+    const categoryId = product.category
+    const subId = product.subCategory
+    const products = await Product.find({
+      category:categoryId,
+      subCategory:subId,
+      _id:{$ne : new mongoose.Types.ObjectId(productId)}
+
+    })
+    res.status(200).json(products);
+  } catch (error) {
+     console.error(error);
+    res.status(500).json({ message: error.message });
+ 
+  }
+}

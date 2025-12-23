@@ -24,8 +24,7 @@ function Navbar() {
   const fetchCategories = async () => {
     try {
       const res = await axios.get(`${API_URL}/api/categorys/`);
-      console.log('Fetched categories:', res.data);
-      setCategories(res.data || []);
+        setCategories(res.data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -69,7 +68,7 @@ function Navbar() {
   };
 
   const handleSubcategoryClick = (categoryId, subcategoryId) => {
-    navigate(`/categories/${categoryId}/subcategory/${subcategoryId}`);
+    navigate(`/categories/${categoryId}/sub/${subcategoryId}`);
     closeMenu();
   };
 
