@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Home.css';
+import SmartRecommendations from './SmartRecommendations ';
+
+
 
 function Home() {
   const [offers, setOffers] = useState([]);
@@ -380,7 +383,7 @@ function Home() {
           </div>
         </section>
       )}
-
+   <SmartRecommendations />
       {/* Categories Section with Smart Navigation */}
       {categories.length > 0 && (
         <section className="categories-section">

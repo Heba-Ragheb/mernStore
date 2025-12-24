@@ -11,7 +11,7 @@ function Categories() {
   useEffect(() => {
     fetchCategories();
   }, []);
-
+  
   const fetchCategories = async () => {
     try {
       const res = await axios.get(`${API_URL}/api/categorys/`);

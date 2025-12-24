@@ -42,6 +42,23 @@ function ProductDetail() {
       setLoading(false);
     }
   };
+  // In your ProductDetail.js or wherever you show individual products
+useEffect(() => {
+  if (product) {
+    // Save to view history
+    const history = JSON.parse(localStorage.getItem('viewHistory') || '[]');
+    
+    const newView = {
+      productId: product._id,
+      categoryId: product.category?._id || product.category,
+      timestamp: Date.now()
+    };
+    
+    // Keep last 50 views
+    const updatedHistory = [newView, ...history].slice(0, 50);
+    localStorage.setItem('viewHistory', JSON.stringify(updatedHistory));
+  }
+}, [product]);
  useEffect(() => {
   if (product && product._id) {
     // Get existing recently viewed products from localStorage

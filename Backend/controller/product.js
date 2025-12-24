@@ -307,4 +307,16 @@ export const getRecentlyViewed = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
+};export const smartRecommendations = async (req, res) => {
+  try {
+    const categorieIds = req.body.ids; 
+
+    const products = await Product.find({
+      categorieId: { $in: categorieIds }
+    });
+
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };

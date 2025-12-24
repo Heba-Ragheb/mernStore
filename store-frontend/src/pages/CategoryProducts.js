@@ -17,7 +17,7 @@ function CategoryProducts() {
   useEffect(() => {
     fetchCategoryProducts();
   }, [categoryId]);
-
+  useEffect(() => { if (categoryId) { const history = JSON.parse(localStorage.getItem('viewHistory') || '[]'); const newView = { categoryId: categoryId, timestamp: Date.now() }; const updatedHistory = [newView, ...history].slice(0, 50); localStorage.setItem('viewHistory', JSON.stringify(updatedHistory)); } }, [categoryId]);
   const fetchCategoryProducts = async () => {
     try {
       setLoading(true);
