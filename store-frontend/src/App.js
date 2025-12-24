@@ -17,11 +17,13 @@ import './App.css';
 import SearchPage from './pages/SearchPage';
 import Footer from './components/Footer';
 import SubcategoryProducts from './pages/SubCategoryProducts';
+import ScrollToTop from './components/ScrollToTop';
 
 
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <div className="App">
         <Navbar />
         <Routes>
