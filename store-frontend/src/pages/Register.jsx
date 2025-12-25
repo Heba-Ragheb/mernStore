@@ -1,6 +1,6 @@
 import { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import "./Register.css";
 
 function Register() {
@@ -8,20 +8,16 @@ function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const { register } = useAuth(); // Use context's register function
 
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/user/register`,
-        { name, email, password },
-        { withCredentials: true }
-      );
-      console.log(res.data);
-      navigate("/home");
+      await register(name, email, password); // Use context's register
+      navigate("/"); // Redirect after state update
     } catch (err) {
-      console.error(err.response.data);
-      alert(err.response.data.message);
+      console.error(err.response?.data);
+      alert(err.response?.data?.message || "Registration failed");
     }
   };
 
