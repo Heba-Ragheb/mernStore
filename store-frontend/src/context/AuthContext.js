@@ -23,17 +23,13 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      console.log('AuthContext: checkAuth called');
-      console.log('AuthContext: API_URL:', API_URL);
-      
+       
       const res = await axios.get(`${API_URL}/api/user/me`, {
         withCredentials: true,
       });
       
-      console.log('AuthContext: checkAuth response:', res.data);
-      setUser(res.data.user);
-      console.log('AuthContext: User state updated:', res.data.user);
-    } catch (error) {
+        setUser(res.data.user);
+      } catch (error) {
       console.error('AuthContext: checkAuth error:', error.response?.data || error.message);
       setUser(null);
     } finally {

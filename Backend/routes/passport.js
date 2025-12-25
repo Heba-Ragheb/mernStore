@@ -13,13 +13,10 @@ router.get("/google", passport.authenticate("google", {
 router.get("/google/callback",
     passport.authenticate("google", { failureRedirect: "/login", session: false }),
     (req, res) => {
-        console.log('Google callback hit!');
-        console.log('User from passport:', req.user);
-        
+         
         // Generate JWT token after successful Google auth
         const token = generateToken(req.user);
-        console.log('Generated token:', token);
-        
+       
         // Set cookie just like regular login
         res.cookie("token", token, {
             httpOnly: true,
@@ -28,12 +25,10 @@ router.get("/google/callback",
             maxAge: 30 * 24 * 60 * 60 * 1000,
         });
         
-        console.log('Cookie set, redirecting to frontend');
-        
+         
         // Redirect to callback page (not home page!)
         const frontendURL = process.env.CLIENT_URL || "http://localhost:3000";
         const redirectURL = `${frontendURL}/auth/google/callback`;
-        console.log('Redirecting to:', redirectURL);
         
         res.redirect(redirectURL);
     }

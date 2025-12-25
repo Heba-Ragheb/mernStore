@@ -11,14 +11,11 @@ function AuthCallback() {
     const handleCallback = async () => {
       const token = searchParams.get('token');
       
-      console.log("Token from URL:", token); // Debug log
-      console.log("Full URL:", window.location.href); // Debug log
-
+     
       if (token) {
         // Store token in localStorage
         localStorage.setItem('token', token);
-        console.log("Token stored in localStorage"); // Debug log
-        
+         
         // Check auth to update user state
         try {
           await checkAuth();
