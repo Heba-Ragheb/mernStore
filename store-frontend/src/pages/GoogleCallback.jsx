@@ -4,18 +4,33 @@ import { useAuth } from '../context/AuthContext';
 
 function GoogleCallback() {
   const navigate = useNavigate();
-  const { checkAuth } = useAuth();
+  const { checkAuth, user } = useAuth();
 
   useEffect(() => {
     const handleCallback = async () => {
+      console.log('GoogleCallback: Starting...');
+      console.log('GoogleCallback: Current user state:', user);
+      
       // Wait a moment for cookie to be set
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Check auth to update user state with the new cookie
-      await checkAuth();
+      console.log('GoogleCallback: About to call checkAuth');
       
-      // Redirect to home page
-      navigate('/');
+      try {
+        // Check auth to update user state with the new cookie
+        await checkAuth();
+        console.log('GoogleCallback: checkAuth completed');
+        
+        // Small delay to ensure state is updated
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        console.log('GoogleCallback: Navigating to home');
+        // Redirect to home page
+        navigate('/');
+      } catch (error) {
+        console.error('GoogleCallback: Error during checkAuth:', error);
+        navigate('/login?error=google_auth_failed');
+      }
     };
 
     handleCallback();
