@@ -13,11 +13,13 @@ import Register from './pages/Register';
 import AdminDashboard from './pages/AdminDashboard';
 import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
+import ScrollToTop from './components/ScrollToTop';
 import './App.css';
 import SearchPage from './pages/SearchPage';
 import Footer from './components/Footer';
 import SubcategoryProducts from './pages/SubCategoryProducts';
-import ScrollToTop from './components/ScrollToTop';
+import GoogleCallback from './pages/GoogleCallback';
+import AuthCallback from './pages/AuthCallback';
 
 
 function App() {
@@ -36,6 +38,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/search" element={<SearchPage />} />
+          <Route path="/auth/google/callback" element={<GoogleCallback />} />
 
           {/* Protected Routes - Require Login */}
           <Route path="/cart" element={
