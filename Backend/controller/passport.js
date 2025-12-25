@@ -6,24 +6,20 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+// Not needed for JWT-only auth, but keeping to avoid errors
+// These won't be called because we use session: false
 passport.serializeUser((user, done) => {
     done(null, user.id);
 });
 
-passport.deserializeUser(async (id, done) => {
-    try {
-        const user = await User.findById(id);
-        done(null, user);
-    } catch (error) {
-        done(error, null);
-    }
+passport.deserializeUser((id, done) => {
+    done(null, id);
 });
 
 passport.use(
     new GoogleStrategy({
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        // Use environment variable for callback URL
         callbackURL: process.env.GOOGLE_CALLBACK_URL || "http://localhost:8080/api/googleAuth/google/callback",
     },
     async (accessToken, refreshToken, profile, done) => {

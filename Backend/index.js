@@ -12,7 +12,6 @@ import orderRouter from "./routes/order.js";
 import offerRouter from "./routes/offers.js";
 
 import cookieParser from "cookie-parser";
-import session from "express-session";
 import passport from "passport";
 import "./controller/passport.js"; // Configure passport strategies
 import cors from "cors";
@@ -30,13 +29,10 @@ app.use(cors({
 
 app.use(express.json());
 app.use(cookieParser());
-app.use(session({
-  secret: process.env.SESSION_SECRET || "mysecret",
-  resave: false,
-  saveUninitialized: false,
-}));
+
+// Initialize passport WITHOUT sessions (we use JWT instead)
 app.use(passport.initialize());
-app.use(passport.session());
+// REMOVED: app.use(passport.session()); - Not needed for JWT auth
 
 // Routes
 app.use("/api/user", userRouter);
@@ -46,11 +42,12 @@ app.use("/api/categorys", categoryRoutes);
 app.use("/api/order", orderRouter);
 app.use("/api/offer", offerRouter);
 app.use("/api/payment", paymentRouter);
-app.use("/api/review",reviewRouter)
+app.use("/api/review", reviewRouter);
+
 // Connect to MongoDB and start server
 mongoose.connect(process.env.DB_URL, { dbName: process.env.DB_NAME })
   .then(() => {
-    const port = process.env.PORT; // Back4App provides PORT=8080
+    const port = process.env.PORT;
     if (!port) {
       console.error("❌ PORT is not defined in environment variables");
       process.exit(1);

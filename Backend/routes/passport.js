@@ -6,11 +6,12 @@ import { generateToken } from "../controller/token.js";
 const router = express.Router();
 
 router.get("/google", passport.authenticate("google", { 
-    scope: ["profile", "email"] 
+    scope: ["profile", "email"] ,
+    session: false 
 }));
 
 router.get("/google/callback",
-    passport.authenticate("google", { failureRedirect: "/login" }),
+    passport.authenticate("google", { failureRedirect: "/login", session: false }),
     (req, res) => {
         console.log('Google callback hit!');
         console.log('User from passport:', req.user);
