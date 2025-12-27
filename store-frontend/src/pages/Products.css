@@ -93,8 +93,8 @@
 /* Products Grid */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 30px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 35px;
   animation: fadeInUp 0.8s ease-out;
 }
 
@@ -336,7 +336,7 @@
 @media (max-width: 1200px) {
   .products-grid {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 25px;
+    gap: 15px;
   }
 }
 
@@ -351,30 +351,106 @@
   }
 
   .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
   }
 
   .product-image-container {
-    height: 220px;
+    height: 180px;
+  }
+
+  .product-info {
+    padding: 15px;
   }
 
   .product-info h3 {
-    font-size: 16px;
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+
+  .product-description {
+    font-size: 12px;
+    margin-bottom: 10px;
   }
 
   .new-price {
-    font-size: 20px;
+    font-size: 18px;
+  }
+
+  .old-price {
+    font-size: 12px;
+  }
+
+  .add-to-cart-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .product-badges {
+    top: 10px;
+    right: 10px;
+    gap: 5px;
+  }
+
+  .badge {
+    padding: 4px 8px;
+    font-size: 10px;
   }
 }
 
 @media (max-width: 480px) {
+  .container {
+    padding: 0 10px;
+  }
+
+  .products-page h1 {
+    font-size: 28px;
+    margin-bottom: 20px;
+  }
+
   .products-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
 
   .product-image-container {
-    height: 250px;
+    height: 160px;
+  }
+
+  .product-info {
+    padding: 12px;
+  }
+
+  .product-info h3 {
+    font-size: 13px;
+    -webkit-line-clamp: 2;
+  }
+
+  .product-description {
+    font-size: 11px;
+    -webkit-line-clamp: 1;
+  }
+
+  .new-price {
+    font-size: 16px;
+  }
+
+  .old-price {
+    font-size: 11px;
+  }
+
+  .discount-tag {
+    font-size: 9px;
+    padding: 3px 6px;
+  }
+
+  .add-to-cart-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .product-footer {
+    padding-top: 10px;
   }
 }
 

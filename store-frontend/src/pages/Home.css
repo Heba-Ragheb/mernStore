@@ -650,6 +650,7 @@
     font-size: 15px;
   }
 }
+
 /* ===============================
    BEST SELLER SECTION
 ================================ */
@@ -727,7 +728,7 @@
   margin: -20px 0;
 }
 
-/* 4 PRODUCTS PER SCREEN - Enhanced Motion */
+/* 4 PRODUCTS PER SCREEN - Enhanced Motion - ONE PRODUCT PER TRANSITION */
 .bestseller-slide {
   flex: 0 0 25%;
   max-width: 25%;
@@ -735,20 +736,10 @@
   box-sizing: border-box;
   transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
   opacity: 1;
-}
-
-/* Slide animation states */
-.bestseller-slide {
   transform: scale(0.95);
-  opacity: 0.6;
 }
 
-.bestseller-slide:nth-child(n) {
-  transform: scale(0.98);
-  opacity: 0.85;
-}
-
-/* Active/Center slides get full scale */
+/* Smooth hover effects */
 .bestseller-slider:hover .bestseller-slide {
   opacity: 0.5;
 }
@@ -873,9 +864,9 @@
 }
 
 /* Stock badges with better design */
-.out-of-stock-badge,
-.low-stock-badge,
-.discount-badge {
+.bestseller-image .out-of-stock-badge,
+.bestseller-image .low-stock-badge,
+.bestseller-image .discount-badge {
   position: absolute;
   top: 20px;
   right: 20px;
@@ -888,7 +879,7 @@
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-.discount-badge {
+.bestseller-image .discount-badge {
   background: rgba(76, 175, 80, 0.95);
   color: white;
   animation: discountPulse 2s ease-in-out infinite;
@@ -1190,13 +1181,13 @@
 
 @media (max-width: 768px) {
   .bestseller-slide {
-    flex: 0 0 50%;
-    max-width: 50%;
-    padding: 15px;
+    flex: 0 0 33.33%;
+    max-width: 33.33%;
+    padding: 12px;
   }
 
   .bestseller-carousel {
-    padding: 0 60px;
+    padding: 0 55px;
   }
 
   .section-title {
@@ -1221,36 +1212,65 @@
 
 @media (max-width: 480px) {
   .bestseller-slide {
-    flex: 0 0 100%;
-    max-width: 100%;
-    padding: 10px;
+    flex: 0 0 33.33%;
+    max-width: 33.33%;
+    padding: 8px;
   }
 
   .bestseller-carousel {
-    padding: 0 50px;
+    padding: 0 45px;
   }
 
   .bestseller-name {
-    font-size: 17px;
+    font-size: 15px;
+    min-height: 42px;
+  }
+
+  .bestseller-description {
+    font-size: 12px;
+    -webkit-line-clamp: 1;
   }
 
   .bestseller-image {
-    height: 260px;
+    height: 180px;
   }
 
   .price-new {
-    font-size: 22px;
+    font-size: 20px;
   }
 
   .bestseller-nav-btn {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
+  }
+
+  .bestseller-rank {
+    width: 34px;
+    height: 34px;
+    font-size: 14px;
+    top: 12px;
+    left: 12px;
+  }
+
+  .bestseller-info {
+    padding: 16px 12px;
+  }
+
+  .cart-btn-bestseller {
+    width: 42px;
+    height: 42px;
   }
 
   .bestseller-section {
     padding: 60px 0;
   }
-}  .recently-viewed-section {
+}
+
+/* ===============================
+   RECENTLY VIEWED SECTION
+================================ */
+
+.recently-viewed-section {
   padding: 60px 0;
   background: #ffffff;
 }
