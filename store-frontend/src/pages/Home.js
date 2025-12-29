@@ -325,15 +325,12 @@ function Home() {
                           <span className="rating-number">{product.rating?.toFixed(1) || '0.0'}</span>
                         </div>
                         <h3 className="bestseller-name">{product.name}</h3>
-                        <p className="bestseller-description">
-                          {product.description?.substring(0, 100)}...
-                        </p>
+                  
                         <div className="bestseller-footer">
                           <div className="price-section">
                             {product.discount > 0 ? (
                               <>
-                                <span className="price-old">${product.price}</span>
-                                <span className="price-new">
+                                  <span className="price-new">
                                   ${(product.price * (1 - product.discount / 100)).toFixed(2)}
                                 </span>
                               </>

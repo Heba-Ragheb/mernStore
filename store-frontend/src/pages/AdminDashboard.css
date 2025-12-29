@@ -942,3 +942,467 @@
     gap: 5px;
   }
 }
+ .item-info.edit-mode {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          width: 100%;
+        }
+
+        .edit-input,
+        .edit-textarea,
+        .edit-input-small {
+          width: 100%;
+          padding: 10px;
+          border: 2px solid #e5e7eb;
+          border-radius: 6px;
+          font-size: 14px;
+          font-family: inherit;
+        }
+
+        .edit-input:focus,
+        .edit-textarea:focus,
+        .edit-input-small:focus {
+          outline: none;
+          border-color: #667eea;
+        }
+
+        .edit-textarea {
+          min-height: 80px;
+          resize: vertical;
+        }
+
+        .edit-input-small {
+          max-width: 150px;
+        }
+
+        .edit-actions {
+          display: flex;
+          gap: 10px;
+          margin-top: 10px;
+        }
+
+        .btn-save {
+          padding: 10px 20px;
+          background: linear-gradient(135deg, #10b981, #059669);
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 600;
+          transition: all 0.3s;
+        }
+
+        .btn-save:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-save:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .btn-cancel {
+          padding: 10px 20px;
+          background: #6b7280;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 600;
+          transition: all 0.3s;
+        }
+
+        .btn-cancel:hover {
+          background: #4b5563;
+        }
+
+        .item-actions {
+          display: flex;
+          gap: 10px;
+        }
+
+        .btn-edit {
+          padding: 8px 16px;
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 600;
+          transition: all 0.3s;
+        }
+
+        .btn-edit:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        @media (max-width: 768px) {
+          .admin-sidebar {
+            position: fixed;
+            z-index: 1000;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+          }
+
+          .admin-sidebar.closed {
+            transform: translateX(-100%);
+          }
+
+          .admin-content {
+            width: 100%;
+          }
+
+          .item-actions {
+            flex-direction: column;
+            width: 100%;
+          }
+
+          .edit-actions {
+            flex-direction: column;
+          }
+
+          .btn-edit,
+          .btn-delete,
+          .btn-save,
+          .btn-cancel {
+            width: 100%;
+          }
+        }
+        /* ============================================
+   EDIT PRODUCT FORM STYLES
+   ============================================ */
+
+/* Edit Mode Container */
+.item-info.edit-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  border: 2px solid #dee2e6;
+  width: 100%;
+}
+
+/* Input Fields */
+.edit-input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: 500;
+  border: 2px solid #ced4da;
+  border-radius: 8px;
+  background: white;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.edit-input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  transform: translateY(-1px);
+}
+
+.edit-input::placeholder {
+  color: #adb5bd;
+}
+
+/* Textarea */
+.edit-textarea {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  border: 2px solid #ced4da;
+  border-radius: 8px;
+  background: white;
+  min-height: 100px;
+  resize: vertical;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.edit-textarea:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+/* Small Input Fields (Price, Stock, Discount) */
+.edit-input-small {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 2px solid #ced4da;
+  border-radius: 8px;
+  background: white;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.edit-input-small:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+/* Image Upload Section */
+.edit-image-section {
+  margin: 15px 0;
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+  border: 2px dashed #d1d5db;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.edit-image-section:hover {
+  border-color: #667eea;
+  background: #f8f9ff;
+}
+
+/* Image Upload Label/Button */
+.edit-image-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(102, 126, 234, 0.2);
+}
+
+.edit-image-label:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
+  box-shadow: 0 6px 12px rgba(102, 126, 234, 0.3);
+  transform: translateY(-2px);
+}
+
+.edit-image-label:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+}
+
+/* Hidden File Input */
+.edit-image-input {
+  display: none;
+}
+
+/* Image Preview Container */
+.image-preview {
+  margin-top: 20px;
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.image-preview img {
+  max-width: 250px;
+  max-height: 250px;
+  border-radius: 12px;
+  border: 3px solid #667eea;
+  object-fit: cover;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.image-preview img:hover {
+  transform: scale(1.05);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Preview Label */
+.preview-label {
+  display: block;
+  margin-top: 12px;
+  font-size: 13px;
+  color: #667eea;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Action Buttons Container */
+.edit-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+  justify-content: flex-end;
+}
+
+/* Save Button */
+.btn-save {
+  padding: 12px 28px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+}
+
+.btn-save:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3);
+  transform: translateY(-2px);
+}
+
+.btn-save:active {
+  transform: translateY(0);
+}
+
+.btn-save:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Cancel Button */
+.btn-cancel {
+  padding: 12px 28px;
+  background: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(107, 114, 128, 0.2);
+}
+
+.btn-cancel:hover {
+  background: #4b5563;
+  box-shadow: 0 6px 12px rgba(107, 114, 128, 0.3);
+  transform: translateY(-2px);
+}
+
+.btn-cancel:active {
+  transform: translateY(0);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .item-info.edit-mode {
+    padding: 15px;
+    gap: 12px;
+  }
+
+  .edit-input,
+  .edit-textarea,
+  .edit-input-small {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+
+  .edit-image-section {
+    padding: 15px;
+  }
+
+  .edit-image-label {
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+
+  .image-preview img {
+    max-width: 200px;
+    max-height: 200px;
+  }
+
+  .edit-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .btn-save,
+  .btn-cancel {
+    width: 100%;
+    padding: 10px 20px;
+  }
+}
+
+/* Loading State */
+.btn-save:disabled::after {
+  content: "...";
+  animation: dots 1.5s infinite;
+}
+
+@keyframes dots {
+  0%, 20% {
+    content: ".";
+  }
+  40% {
+    content: "..";
+  }
+  60%, 100% {
+    content: "...";
+  }
+}
+
+/* Focus Visible for Accessibility */
+.edit-input:focus-visible,
+.edit-textarea:focus-visible,
+.edit-input-small:focus-visible,
+.edit-image-label:focus-visible,
+.btn-save:focus-visible,
+.btn-cancel:focus-visible {
+  outline: 3px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* Smooth Transitions */
+* {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Empty State Message */
+.image-preview:empty::before {
+  content: "No image selected";
+  display: block;
+  padding: 20px;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* Success Animation */
+@keyframes successPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.btn-save.success {
+  animation: successPulse 0.6s ease;
+}

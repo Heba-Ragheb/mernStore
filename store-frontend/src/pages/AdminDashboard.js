@@ -29,6 +29,17 @@ function AdminDashboard() {
   });
   const [productImages, setProductImages] = useState([]);
   const [availableSubcategories, setAvailableSubcategories] = useState([]);
+  
+  // Edit Product State
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [editProductForm, setEditProductForm] = useState({
+    name: '',
+    description: '',
+    price: '',
+    stock: '',
+    discount: '',
+  });
+  const [editProductImage, setEditProductImage] = useState(null);
 
   // Category Form
   const [categoryForm, setCategoryForm] = useState({ name: '' });
@@ -68,27 +79,24 @@ function AdminDashboard() {
   }, [selectedCategory, selectedSubcategory, products]);
 
   const filterProducts = () => {
-  if (!selectedCategory) {
-    setFilteredProducts(products);
-    return;
-  }
+    if (!selectedCategory) {
+      setFilteredProducts(products);
+      return;
+    }
 
-  if (selectedSubcategory) {
-    // Filter by subcategory - compare subCategory ID (string) with selectedSubcategory (string)
-    const filtered = products.filter(p => 
-      p.subCategory === selectedSubcategory
-    );
-    console.log('Filtered by subcategory:', selectedSubcategory, filtered);
-    setFilteredProducts(filtered);
-  } else {
-    // Filter by category only - compare category object's _id with selectedCategory
-    const filtered = products.filter(p => 
-      p.category && p.category._id === selectedCategory
-    );
-    console.log('Filtered by category:', selectedCategory, filtered);
-    setFilteredProducts(filtered);
-  }
-};
+    if (selectedSubcategory) {
+      const filtered = products.filter(p => 
+        p.subCategory === selectedSubcategory
+      );
+      setFilteredProducts(filtered);
+    } else {
+      const filtered = products.filter(p => 
+        p.category && p.category._id === selectedCategory
+      );
+      setFilteredProducts(filtered);
+    }
+  };
+
   const fetchProducts = async () => {
     try {
       const res = await axios.get(`${API_URL}/api/products/index`);
@@ -200,6 +208,87 @@ function AdminDashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEditProduct = (product) => {
+    setEditingProduct(product._id);
+    setEditProductForm({
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      stock: product.stock,
+      discount: product.discount || 0,
+    });
+    setEditProductImage(null);
+  };
+
+  const handleUpdateProduct = async (productId) => {
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append('name', editProductForm.name);
+    formData.append('description', editProductForm.description);
+    formData.append('price', editProductForm.price);
+    formData.append('stock', editProductForm.stock);
+    formData.append('discount', editProductForm.discount || 0);
+    
+    if (editProductImage) {
+      formData.append('image', editProductImage);
+    }
+
+    try {
+      const response = await axios.put(
+        `${API_URL}/api/products/update/${productId}`,
+        formData,
+        { 
+          withCredentials: true,
+          headers: { 'Content-Type': 'multipart/form-data' }
+        }
+      );
+
+      alert('Product updated successfully!');
+      
+      // Update the product in the local state immediately
+      if (response.data.product || response.data.updatedProduct) {
+        const updatedProduct = response.data.product || response.data.updatedProduct;
+        setProducts(prevProducts => 
+          prevProducts.map(p => p._id === productId ? updatedProduct : p)
+        );
+        setFilteredProducts(prevProducts => 
+          prevProducts.map(p => p._id === productId ? updatedProduct : p)
+        );
+      }
+      
+      setEditingProduct(null);
+      setEditProductForm({
+        name: '',
+        description: '',
+        price: '',
+        stock: '',
+        discount: '',
+      });
+      setEditProductImage(null);
+      
+      // Fetch fresh data from server
+      await fetchProducts();
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || 'Failed to update product');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingProduct(null);
+    setEditProductForm({
+      name: '',
+      description: '',
+      price: '',
+      stock: '',
+      discount: '',
+    });
+    setEditProductImage(null);
   };
 
   const handleDeleteProduct = async (id) => {
@@ -459,50 +548,51 @@ function AdminDashboard() {
             <div className="sidebar-content">
               <h3 className="sidebar-title">Categories</h3>
               
-            <button 
-  className={`sidebar-item all-products ${!selectedCategory ? 'active' : ''}`}
-  onClick={clearFilters}
->
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-    <rect x="3" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
-    <rect x="14" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
-    <rect x="3" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
-    <rect x="14" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
-  </svg>
-  All Products ({products.length})
-</button>
+              <button 
+                className={`sidebar-item all-products ${!selectedCategory ? 'active' : ''}`}
+                onClick={clearFilters}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                  <rect x="14" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                  <rect x="3" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                  <rect x="14" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                </svg>
+                All Products ({products.length})
+              </button>
+
               {categories.map((category) => (
                 <div key={category._id} className="category-group">
-                 <button
-  className={`sidebar-item category ${selectedCategory === category._id && !selectedSubcategory ? 'active' : ''}`}
-  onClick={() => handleCategoryClick(category._id)}
->
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-    <path d="M3 7h18M3 12h18M3 17h18" stroke="currentColor" strokeWidth="2"/>
-  </svg>
-  {category.name}
-  <span className="category-count">
-    ({products.filter(p => p.category && p.category._id === category._id).length})
-  </span>
-</button>
+                  <button
+                    className={`sidebar-item category ${selectedCategory === category._id && !selectedSubcategory ? 'active' : ''}`}
+                    onClick={() => handleCategoryClick(category._id)}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <path d="M3 7h18M3 12h18M3 17h18" stroke="currentColor" strokeWidth="2"/>
+                    </svg>
+                    {category.name}
+                    <span className="category-count">
+                      ({products.filter(p => p.category && p.category._id === category._id).length})
+                    </span>
+                  </button>
 
                   {selectedCategory === category._id && category.subcategories && category.subcategories.length > 0 && (
-  <div className="subcategory-list">
-    {category.subcategories.map((sub) => (
-      <button
-        key={sub._id}
-        className={`sidebar-item subcategory ${selectedSubcategory === sub._id ? 'active' : ''}`}
-        onClick={() => handleSubcategoryClick(category._id, sub._id)}
-      >
-        <span className="subcategory-dot">•</span>
-        {sub.name}
-        <span className="category-count">
-          ({products.filter(p => p.subCategory === sub._id).length})
-        </span>
-      </button>
-    ))}
-  </div>
-)}
+                    <div className="subcategory-list">
+                      {category.subcategories.map((sub) => (
+                        <button
+                          key={sub._id}
+                          className={`sidebar-item subcategory ${selectedSubcategory === sub._id ? 'active' : ''}`}
+                          onClick={() => handleSubcategoryClick(category._id, sub._id)}
+                        >
+                          <span className="subcategory-dot">•</span>
+                          {sub.name}
+                          <span className="category-count">
+                            ({products.filter(p => p.subCategory === sub._id).length})
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -659,40 +749,128 @@ function AdminDashboard() {
                     {filteredProducts.map((product) => (
                       <div key={product._id} className="admin-item">
                         <img src={product.images[0]?.url} alt={product.name} />
-                        <div className="item-info">
-                          <h3>{product.name}</h3>
-                          <p className="product-category-info">
-                            {product.category?.name || 'No Category'}
-                            {product.subCategory && ` > Subcategory`}
-                          </p>
-                          <div className="product-price-info">
-                            {product.discount > 0 ? (
-                              <>
-                                <span className="old-price">${product.price}</span>
-                                <span className="new-price">
-                                  ${(product.price * (1 - product.discount / 100)).toFixed(2)}
-                                </span>
-                                <span className="discount-tag">-{product.discount}%</span>
-                              </>
-                            ) : (
-                              <span className="new-price">${product.price}</span>
-                            )}
+                        
+                        {editingProduct === product._id ? (
+                          // Edit Mode
+                          <div className="item-info edit-mode">
+                            <input
+                              type="text"
+                              value={editProductForm.name}
+                              onChange={(e) => setEditProductForm({...editProductForm, name: e.target.value})}
+                              placeholder="Product Name"
+                              className="edit-input"
+                            />
+                            <textarea
+                              value={editProductForm.description}
+                              onChange={(e) => setEditProductForm({...editProductForm, description: e.target.value})}
+                              placeholder="Description"
+                              className="edit-textarea"
+                            />
+                            <input
+                              type="number"
+                              value={editProductForm.price}
+                              onChange={(e) => setEditProductForm({...editProductForm, price: e.target.value})}
+                              placeholder="Price"
+                              className="edit-input-small"
+                            />
+                            <input
+                              type="number"
+                              value={editProductForm.stock}
+                              onChange={(e) => setEditProductForm({...editProductForm, stock: e.target.value})}
+                              placeholder="Stock"
+                              className="edit-input-small"
+                            />
+                            <input
+                              type="number"
+                              value={editProductForm.discount}
+                              onChange={(e) => setEditProductForm({...editProductForm, discount: e.target.value})}
+                              placeholder="Discount %"
+                              className="edit-input-small"
+                            />
+                            
+                            <div className="edit-image-section">
+                              <label className="edit-image-label">
+                                📷 Change Product Image
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => setEditProductImage(e.target.files[0])}
+                                  className="edit-image-input"
+                                />
+                              </label>
+                              {editProductImage && (
+                                <div className="image-preview">
+                                  <img 
+                                    src={URL.createObjectURL(editProductImage)} 
+                                    alt="New preview" 
+                                  />
+                                  <span className="preview-label">New Image</span>
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="edit-actions">
+                              <button
+                                onClick={() => handleUpdateProduct(product._id)}
+                                className="btn-save"
+                                disabled={loading}
+                              >
+                                {loading ? 'Saving...' : 'Save'}
+                              </button>
+                              <button
+                                onClick={handleCancelEdit}
+                                className="btn-cancel"
+                              >
+                                Cancel
+                              </button>
+                            </div>
                           </div>
-                          <p className="stock-info">Stock: {product.stock || 0}</p>
-                        </div>
-                        <button
-                          onClick={() => handleDeleteProduct(product._id)}
-                          className="btn-delete"
-                        >
-                          Delete
-                        </button>
+                        ) : (
+                          // View Mode
+                          <>
+                            <div className="item-info">
+                              <h3>{product.name}</h3>
+                              <p className="product-category-info">
+                                {product.category?.name || 'No Category'}
+                                {product.subCategory && ` > Subcategory`}
+                              </p>
+                              <div className="product-price-info">
+                                {product.discount > 0 ? (
+                                  <>
+                                    <span className="old-price">${product.price}</span>
+                                    <span className="new-price">
+                                      ${(product.price * (1 - product.discount / 100)).toFixed(2)}
+                                    </span>
+                                    <span className="discount-tag">-{product.discount}%</span>
+                                  </>
+                                ) : (
+                                  <span className="new-price">${product.price}</span>
+                                )}
+                              </div>
+                              <p className="stock-info">Stock: {product.stock || 0}</p>
+                            </div>
+                            <div className="item-actions">
+                              <button
+                                onClick={() => handleEditProduct(product)}
+                                className="btn-edit"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteProduct(product._id)}
+                                className="btn-delete"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     ))}
                   </div>
                 </div>
               </div>
             )}
-
             {/* Categories, Offers, Orders tabs remain the same */}
             {activeTab === 'categories' && (
           <div className="tab-content">

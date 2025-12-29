@@ -130,7 +130,7 @@
 
 .price-section {
   display: flex;
-  align-items: center;
+  
   gap: 16px;
   margin-bottom: 20px;
 }
@@ -145,6 +145,8 @@
   font-size: 36px;
   font-weight: 700;
   color: #667eea;
+  margin-left: 5px;
+  margin-right: 5px;
 }
 
 .discount-tag {

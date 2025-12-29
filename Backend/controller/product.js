@@ -4,6 +4,8 @@ import Category from "../models/category.js";
 import Product from "../models/product.js";
 import User from "../models/user.js";
 import mongoose from "mongoose";
+import path from "path"
+import fs from"fs"
 // ---------------------- Add Product ----------------------
 export const addProduct = async (req, res) => {
   try {
@@ -127,20 +129,68 @@ export const deleteProduct = async (req, res) => {
 export const updateProduct = async (req, res) => {
   try {
     const productId = req.params.id;
+    const { name, description, price, category, subCategory, stock, discount } = req.body;
+    const userId = req.user._id;
 
+    // Check authorization
+    const user = await User.findById(userId);
+    if (!user || user.role === "User") {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // Find the existing product
     const product = await Product.findById(productId);
-    if (!product)
+    if (!product) {
       return res.status(404).json({ message: "Product not found" });
+    }
 
+    // Calculate final price if price or discount changed
+    const finalPrice = discount 
+      ? price - (price * discount) / 100 
+      : price;
+
+    // Prepare update data
+    const updateData = {
+      name: name || product.name,
+      description: description || product.description,
+      price: price || product.price,
+      stock: stock !== undefined ? stock : product.stock,
+      discount: discount !== undefined ? discount : product.discount,
+      finalPrice
+    };
+
+    // Handle image update if new file is uploaded
+    if (req.file) {
+      // Delete old image from Cloudinary if it exists
+      if (product.images && product.images.length > 0 && product.images[0].publicId) {
+        try {
+          await cloudinary.uploader.destroy(product.images[0].publicId);
+        } catch (err) {
+          console.error('Error deleting old image:', err);
+        }
+      }
+      
+      // Add new image with proper structure
+      updateData.images = [{
+        url: req.file.path, // Cloudinary URL
+        publicId: req.file.filename // Cloudinary public ID
+      }];
+    }
+
+    // Update the product (without changing category)
     const updatedProduct = await Product.findByIdAndUpdate(
       productId,
-      req.body,
+      { $set: updateData },
       { new: true }
-    );
+    ).populate('category');
 
-    res.status(200).json({ message: "Product updated", updatedProduct });
+    res.status(200).json({ 
+      message: "Product updated successfully", 
+      product: updatedProduct 
+    });
+
   } catch (error) {
-    console.error(error);
+    console.error('Update product error:', error);
     res.status(500).json({ message: error.message });
   }
 };

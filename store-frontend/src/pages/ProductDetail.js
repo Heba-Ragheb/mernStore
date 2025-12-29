@@ -347,11 +347,11 @@ useEffect(() => {
             {/* Price Section */}
             <div className="price-section">
               {product.discount > 0 ? (
-                <>
+                <div>
                   <span className="price-old">${product.price}</span>
                   <span className="price-current">${finalPrice}</span>
                   <span className="discount-tag">Save {product.discount}%</span>
-                </>
+                </div>
               ) : (
                 <span className="price-current">${product.price}</span>
               )}

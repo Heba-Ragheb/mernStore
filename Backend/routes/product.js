@@ -12,7 +12,7 @@ router.post("/smartRecommendations",smartRecommendations)
 router.get("/show/:id",showProduct)
 router.get("/relatedProducts/:id",relatedProduct)
 router.delete("/delete/:id",authJwt,deleteProduct)
-router.put("/update/:id",authJwt,updateProduct)
+router.put("/update/:id",authJwt,authJwt,upload.single("image"),updateProduct)
 router.post("/addToCard/:id",authJwt,addToCard)
 router.post("/removeFromCard/:id",authJwt,removeFromCard)
 router.post("/updateCartQuantity/:id", authJwt, updateCartQuantity);
