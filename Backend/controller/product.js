@@ -6,6 +6,7 @@ import User from "../models/user.js";
 import mongoose from "mongoose";
 import path from "path"
 import fs from"fs"
+import { clearProductsCache } from '../middleware/cache.js';
 // ---------------------- Add Product ----------------------
 export const addProduct = async (req, res) => {
   try {
@@ -57,7 +58,7 @@ export const addProduct = async (req, res) => {
     $push:{
      "subcategories.$.products":product._id  }
     } )}
-   
+   await clearProductsCache();
     res.status(201).json({ product });
   } catch (error) {
     console.error(error);
@@ -118,6 +119,7 @@ export const deleteProduct = async (req, res) => {
     $pull:{
      "subcategories.$.products":product._id  }
     } )}
+    await clearProductsCache();
     res.status(200).json({ message: "Product deleted" });
   } catch (error) {
     console.error(error);
@@ -183,7 +185,7 @@ export const updateProduct = async (req, res) => {
       { $set: updateData },
       { new: true }
     ).populate('category');
-
+ await clearProductsCache();
     res.status(200).json({ 
       message: "Product updated successfully", 
       product: updatedProduct 

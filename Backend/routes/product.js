@@ -2,10 +2,11 @@ import express from "express"
 import upload from "../middleware/upload.js"
 import { addProduct, addToCard, bestSeller, deleteProduct, getRecentlyViewed, index, relatedProduct, removeFromCard, showProduct, updateCartQuantity, updateProduct,smartRecommendations } from "../controller/product.js";
 import { authJwt } from "../middleware/auth.js";
+import { cacheProducts, clearProductsCache } from '../middleware/cache.js';
 const router = express.Router();
 router.post("/addOneImage",authJwt,upload.single("image"),addProduct)
 router.post("/addmultiImage",authJwt,upload.array("image",5),addProduct)
-router.get("/index",index)
+router.get("/index", cacheProducts,index)
 router.get("/bestSeller",bestSeller)
 router.post("/recently-viewed",getRecentlyViewed)
 router.post("/smartRecommendations",smartRecommendations)
