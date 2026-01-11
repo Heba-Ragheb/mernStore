@@ -69,7 +69,7 @@ export const addProduct = async (req, res) => {
 // ---------------------- Get All Products ----------------------
 export const index = async (req, res) => {
   try {
-    const products = await Product.find();
+    const products = await Product.find().populate('category');
     res.status(200).json({ products });
   } catch (error) {
     console.error(error);

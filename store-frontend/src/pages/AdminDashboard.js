@@ -96,6 +96,13 @@ function AdminDashboard() {
       setFilteredProducts(filtered);
     }
   };
+  const getSubcategoryName = (product) => {
+  if (!product.subCategory) return '';
+  const category = categories.find(cat => cat._id === product.category?._id);
+  const subcategory = category?.subcategories?.find(sub => sub._id === product.subCategory);
+  return subcategory ? ` > ${subcategory.name}` : '';
+};
+
 
   const fetchProducts = async () => {
     try {
@@ -830,10 +837,10 @@ function AdminDashboard() {
                           <>
                             <div className="item-info">
                               <h3>{product.name}</h3>
-                              <p className="product-category-info">
-                                {product.category?.name || 'No Category'}
-                                {product.subCategory && ` > Subcategory`}
-                              </p>
+                             <p className="product-category-info">
+  {product.category?.name || 'No Category'}
+  {getSubcategoryName(product)}
+</p>
                               <div className="product-price-info">
                                 {product.discount > 0 ? (
                                   <>
