@@ -11,6 +11,7 @@ function AdminRoute({ children }) {
       </div>
     );
   }
+  
 
   if (!user) {
     return <Navigate to="/login" />;
